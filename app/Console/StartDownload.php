@@ -73,6 +73,7 @@ trait StartDownload
         $this->listMessages('ERROR', $errors);
         $this->listMessages('Warning', $warnings);
         $this->listMessages('Message', $messages);
+        $this->downloadIdentifier = $manager->getDownloadIdentifier();
 
         return 0;
     }

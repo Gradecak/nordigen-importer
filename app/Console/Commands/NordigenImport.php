@@ -110,6 +110,9 @@ class NordigenImport extends Command
 
             return $result;
         }
+
+        
+
         $secondResult = $this->startSync($configuration);
         if (0 === $secondResult) {
             $this->line('Sync to Firefly III complete.');

@@ -26,7 +26,6 @@ namespace App\Services\Sync\JobStatus;
 
 /**
  * Class JobStatus.
- * @deprecated
  */
 class JobStatus
 {
@@ -52,7 +51,6 @@ class JobStatus
      */
     public function __construct()
     {
-        die('do not use13');
         $this->status   = self::JOB_WAITING;
         $this->errors   = [];
         $this->warnings = [];
@@ -66,7 +64,6 @@ class JobStatus
      */
     public static function fromArray(array $array): self
     {
-        /*
         $config           = new self;
         $config->status   = $array['status'];
         $config->errors   = $array['errors'] ?? [];
@@ -74,7 +71,6 @@ class JobStatus
         $config->messages = $array['messages'] ?? [];
 
         return $config;
-        */
     }
 
     /**
