@@ -49,38 +49,53 @@ namespace App\Services\Session;
  */
 class Constants
 {
-    /** @var string */
+    // constants to remember access token, refresh token and validity:
+    public const ACCESS_TOKEN        = 'access_token';
+    public const REFRESH_TOKEN       = 'refresh_token';
+    public const ACCESS_EXPIRY_TIME  = 'access_expiry_time';
+    public const REFRESH_EXPIRY_TIME = 'refresh_expiry_time';
+
+    // constants to see if the user has uploaded config files, used to skip a form.
     public const HAS_UPLOAD = 'has_uploaded_file';
-    /** @var string */
-    public const UPLOAD_CSV_FILE = 'csv_file_path';
 
-    ///** @var string */
-    //public const CONNECTION_SELECTED_INDICATOR = 'connection_selected';
+    // this is where the configuration constant is saved under.
+    public const CONFIGURATION = 'configuration';
 
+    // names of uploadable files
+    public const UPLOAD_CONFIG_FILE = 'config_file_path';
+
+    // to indicate a bank has been chosen
     public const SELECTED_BANK_COUNTRY = 'selected_bank_country';
 
-    /** @var string */
-    public const UPLOAD_CONFIG_FILE = 'config_file_path';
-    /** @var string */
-    public const CONFIGURATION = 'configuration';
-    /** @var string */
-    public const CONFIG_COMPLETE_INDICATOR = 'config_complete';
-    /** @var string string */
-    public const ROLES_COMPLETE_INDICATOR = 'role_config_complete';
-    /** @var string */
-    public const KEY_COMPLETE_INDICATOR = 'key_complete';
-    /** @var string */
-    public const DOWNLOAD_JOB_IDENTIFIER = 'download_job_id';
 
-    /** @var string */
-    public const SYNC_JOB_IDENTIFIER = 'sync_job_id';
-
-    /** @var string */
-    public const MAPPING_COMPLETE_INDICATOR = 'mapping_config_complete';
-
-    /** @var string */
-    public const JOB_STATUS = 'import_job_status';
-
-    public const JOB_IDENTIFIER = 'import_job_id';
+//    /** @var string */
+//    /** @var string */
+//    public const UPLOAD_CSV_FILE = 'csv_file_path';
+//
+//    ///** @var string */
+//    //public const CONNECTION_SELECTED_INDICATOR = 'connection_selected';
+//
+//
+//    /** @var string */
+//    /** @var string */
+//    /** @var string */
+//    public const CONFIG_COMPLETE_INDICATOR = 'config_complete';
+//    /** @var string string */
+//    public const ROLES_COMPLETE_INDICATOR = 'role_config_complete';
+//    /** @var string */
+//    public const KEY_COMPLETE_INDICATOR = 'key_complete';
+//    /** @var string */
+//    public const DOWNLOAD_JOB_IDENTIFIER = 'download_job_id';
+//
+//    /** @var string */
+//    public const SYNC_JOB_IDENTIFIER = 'sync_job_id';
+//
+//    /** @var string */
+//    public const MAPPING_COMPLETE_INDICATOR = 'mapping_config_complete';
+//
+//    /** @var string */
+//    public const JOB_STATUS = 'import_job_status';
+//
+//    public const JOB_IDENTIFIER = 'import_job_id';
 
 }

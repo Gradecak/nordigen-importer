@@ -55,7 +55,8 @@ use Illuminate\Http\Request;
 class UploadedFiles
 {
     /**
-     * Check if the user has already uploaded files in this session. If so, continue to configuration.
+     * Check if the user has already uploaded files in this session.
+     * If so, continue to configuration.
      *
      * @param Request $request
      * @param Closure $next
@@ -65,7 +66,7 @@ class UploadedFiles
      */
     public function handle(Request $request, Closure $next)
     {
-        die('do not use');
+        die('do not use 3');
         if (session()->has(Constants::HAS_UPLOAD)) {
             return redirect()->route('import.connections.index');
         }

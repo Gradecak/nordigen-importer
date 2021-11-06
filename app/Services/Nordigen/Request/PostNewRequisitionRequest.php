@@ -1,6 +1,6 @@
 <?php
 /*
- * ListBanksRequest.php
+ * PostNewRequisitionRequest.php
  * Copyright (c) 2021 james@firefly-iii.org
  *
  * This file is part of the Firefly III Nordigen importer
@@ -20,34 +20,43 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-declare(strict_types=1);
-
-
 namespace App\Services\Nordigen\Request;
 
-use App\Exceptions\ImporterErrorException;
-use App\Exceptions\ImporterHttpException;
-use App\Services\Nordigen\Response\ListBanksResponse;
+use App\Services\Nordigen\Response\NewRequisitionResponse;
 use App\Services\Nordigen\Response\Response;
-use App\Services\Nordigen\Response\ErrorResponse;
+use Log;
 
 /**
- * Class ListBanksRequest
+ * Class PostNewRequisitionRequest
  */
-class ListBanksRequest extends Request
+class PostNewRequisitionRequest extends Request
 {
-    /**
-     * ListCustomersRequest constructor.
-     *
-     * @param string $url
-     * @param string $token
-     */
+    private string $bank;
+    private string $reference;
+
     public function __construct(string $url, string $token)
     {
         $this->setParameters([]);
         $this->setBase($url);
         $this->setToken($token);
-        $this->setUrl('api/v2/institutions/');
+        $this->setUrl('api/v2/requisitions/');
+        $this->reference = '';
+    }
+
+    /**
+     * @param string $bank
+     */
+    public function setBank(string $bank): void
+    {
+        $this->bank = $bank;
+    }
+
+    /**
+     * @param string $reference
+     */
+    public function setReference(string $reference): void
+    {
+        $this->reference = $reference;
     }
 
     /**
@@ -55,20 +64,7 @@ class ListBanksRequest extends Request
      */
     public function get(): Response
     {
-        try {
-            $response = $this->authenticatedGet();
-        } catch (ImporterErrorException $e) {
-            $error = [
-                'error' => [
-                    'message' =>$e->getMessage()
-                ]
-            ];
-            return new ErrorResponse($error);
-        } catch (ImporterHttpException $e) {
-            return new ErrorResponse($e->json ?? []);
-        }
-
-        return new ListBanksResponse($response);
+        // TODO: Implement get() method.
     }
 
     /**
@@ -76,7 +72,16 @@ class ListBanksRequest extends Request
      */
     public function post(): Response
     {
-        // Implement post() method.
+        Log::debug(sprintf('Now at %s', __METHOD__));
+        $array =
+            [
+                'redirect'       => route('import.build-link.callback'),
+                'institution_id' => $this->bank,
+                'reference' => $this->reference,
+            ];
+
+        $result = $this->authenticatedJsonPost($array);
+        return new NewRequisitionResponse($result);
     }
 
     /**
@@ -84,6 +89,6 @@ class ListBanksRequest extends Request
      */
     public function put(): Response
     {
-        // Implement put() method.
+        // TODO: Implement put() method.
     }
 }

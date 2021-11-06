@@ -47,7 +47,8 @@ class Controller extends BaseController
         $variables = [
             'FIREFLY_III_ACCESS_TOKEN' => 'importer.access_token',
             'FIREFLY_III_URL'          => 'importer.url',
-            'NORDIGEN_TOKEN'           => 'importer.nordigen_token',
+            'NORDIGEN_ID'              => 'importer.nordigen_id',
+            'NORDIGEN_KEY'          => 'importer.nordigen_key',
         ];
         foreach ($variables as $env => $config) {
             $value = (string) config($config);

@@ -65,9 +65,9 @@
                                             <select class="form-control bank-selector"
                                                     name="bank_{{ country.code }}"
                                                     id="bank_{{ country.code }}">
-                                                <option label="(no bank)" value="XX">(no bank)</option>
+                                                <option label="(no bank)" value="XX" data-days="0">(no bank)</option>
                                                 {% for bank in country.banks %}
-                                                    <option label="{{ bank.name }}"
+                                                    <option label="{{ bank.name }}" data-days="{{ bank.transactionTotalDays }}"
                                                             value="{{ bank.id }}">{{ bank.name }}</option>
                                                 {% endfor %}
                                             </select>
@@ -111,6 +111,8 @@
 
         function showDayCounter() {
             $('.bank-selected').show();
+            let val = $('#country').val();
+            $('.days').text(($('#bank_' + val + ' option:selected').data('days')));
         }
 
         function selectCountry() {

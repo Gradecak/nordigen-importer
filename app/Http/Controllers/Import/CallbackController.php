@@ -1,6 +1,6 @@
 <?php
 /*
- * ConnectionSelected.php
+ * CallbackController.php
  * Copyright (c) 2021 james@firefly-iii.org
  *
  * This file is part of the Firefly III Nordigen importer
@@ -22,35 +22,25 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Middleware;
+namespace App\Http\Controllers\Import;
 
 
-use App\Services\Session\Constants;
-use Closure;
-use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 
 /**
- * Class ConnectionSelected
- * @deprecated
+ * Class CallbackController
  */
-class ConnectionSelected
+class CallbackController extends Controller
 {
     /**
-     * Check if the user has already uploaded files in this session. If so, continue to configuration.
-     *
-     * @param Request $request
-     * @param Closure $next
-     *
-     * @return mixed
      *
      */
-    public function handle(Request $request, Closure $next)
+    public function index()
     {
-        die('do not use 1');
-        if (session()->has(Constants::CONNECTION_SELECTED_INDICATOR) && 'true' === session()->get(Constants::CONNECTION_SELECTED_INDICATOR)) {
-            return redirect()->route('import.configure.index');
-        }
-
-        return $next($request);
+        // get all the connections the user has.
+        // since this is a callback, we expect there just to be one.
+        // could still be multiple. Offer choice again?
+        return redirect(route('import.connections.index'));
     }
+
 }

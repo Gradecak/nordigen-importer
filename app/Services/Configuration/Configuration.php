@@ -36,15 +36,42 @@ class Configuration
     private string $country;
     private string $bank;
     private int    $version;
+    private array  $requisitions;
 
     /**
      * Configuration constructor.
      */
     private function __construct()
     {
-        $this->country = 'XX';
-        $this->bank    = 'XX';
-        $this->version = self::VERSION;
+        $this->country      = 'XX';
+        $this->bank         = 'XX';
+        $this->requisitions = [];
+        $this->version      = self::VERSION;
+    }
+
+    /**
+     * @return string
+     */
+    public function getBank(): string
+    {
+        return $this->bank;
+    }
+
+    /**
+     * @param string $identifier
+     */
+    public function addRequisition(string $key, string $identifier)
+    {
+        $this->requisitions[$key] = $identifier;
+    }
+
+    /**
+     * @param string $key
+     * @return string|null
+     */
+    public function getRequisition(string $key): ?string
+    {
+        return array_key_exists($key, $this->requisitions) ? $this->requisitions[$key] : null;
     }
 
     /**
@@ -65,11 +92,12 @@ class Configuration
      */
     public static function fromArray(array $array): self
     {
-        $version         = $array['version'] ?? 1;
-        $object          = new self;
-        $object->version = $version;
-        $object->country = $array['country'] ?? 'XX';
-        $object->bank    = $array['bank'] ?? 'XX';
+        $version              = $array['version'] ?? 1;
+        $object               = new self;
+        $object->version      = $version;
+        $object->country      = $array['country'] ?? 'XX';
+        $object->bank         = $array['bank'] ?? 'XX';
+        $object->requisitions = $array['requisitions'] ?? [];
 
         return $object;
     }
@@ -81,11 +109,14 @@ class Configuration
     public function toArray(): array
     {
         return [
-            'version' => $this->version,
-            'country' => $this->country,
-            'bank'    => $this->bank,
+            'version'      => $this->version,
+            'country'      => $this->country,
+            'bank'         => $this->bank,
+            'requisitions' => $this->requisitions,
         ];
     }
+
+    //public function getRequisition
 
     /**
      * @param string $country
@@ -102,10 +133,6 @@ class Configuration
     {
         $this->bank = $bank;
     }
-
-
-
-
 
 
 }

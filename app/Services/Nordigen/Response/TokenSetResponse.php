@@ -1,6 +1,6 @@
 <?php
 /*
- * ConnectionSelected.php
+ * TokenSetResponse.php
  * Copyright (c) 2021 james@firefly-iii.org
  *
  * This file is part of the Firefly III Nordigen importer
@@ -20,37 +20,27 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-declare(strict_types=1);
-
-namespace App\Http\Middleware;
-
-
-use App\Services\Session\Constants;
-use Closure;
-use Illuminate\Http\Request;
+namespace App\Services\Nordigen\Response;
 
 /**
- * Class ConnectionSelected
- * @deprecated
+ * Class TokenSetResponse
  */
-class ConnectionSelected
+class TokenSetResponse extends Response
 {
-    /**
-     * Check if the user has already uploaded files in this session. If so, continue to configuration.
-     *
-     * @param Request $request
-     * @param Closure $next
-     *
-     * @return mixed
-     *
-     */
-    public function handle(Request $request, Closure $next)
-    {
-        die('do not use 1');
-        if (session()->has(Constants::CONNECTION_SELECTED_INDICATOR) && 'true' === session()->get(Constants::CONNECTION_SELECTED_INDICATOR)) {
-            return redirect()->route('import.configure.index');
-        }
+    public string $accessToken;
+    public string $refreshToken;
+    public int    $accessExpires;
+    public int    $refreshExpires;
 
-        return $next($request);
+    /**
+     * @inheritDoc
+     */
+    public function __construct(array $data)
+    {
+        $this->accessToken  = $data['access'];
+        $this->refreshToken = $data['refresh'];
+
+        $this->accessExpires  = time() + $data['access_expires'];
+        $this->refreshExpires = time() + $data['refresh_expires'];
     }
 }

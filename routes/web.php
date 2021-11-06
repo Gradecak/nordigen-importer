@@ -38,7 +38,9 @@ Route::post('/import/upload', ['uses' => 'Import\UploadController@upload', 'as' 
 Route::get('/import/selection', ['uses' => 'Import\SelectionController@index', 'as' => 'import.selection.index']);
 Route::post('/import/selection/submit', ['uses' => 'Import\SelectionController@post', 'as' => 'import.selection.post']);
 
-
+// 002 get send to Nordigen and come back:
+Route::get('/import/build-link', ['uses' => 'Import\LinkController@build', 'as' => 'import.build-link.index']);
+Route::get('/import/link-callback', ['uses' => 'Import\LinkController@callback', 'as' => 'import.build-link.callback']);
 
 // 999 list tokens (can be skipped)
 //Route::get('/import/spectre-connections', ['uses' => 'Import\ConnectionController@index', 'as' => 'import.connections.index']);
@@ -74,6 +76,7 @@ Route::get('/flush','IndexController@flush')->name('flush');
 // routes to go back to other steps (also takes care of session vars)
 Route::get('/back/start', 'NavController@toStart')->name('back.start');
 Route::get('/back/upload', 'NavController@toUpload')->name('back.upload');
+Route::get('/back/selection', 'NavController@toSelection')->name('back.selection');
 //Route::get('/back/connection', 'NavController@toConnection')->name('back.select-connection');
 //Route::get('/back/config', 'NavController@toConfig')->name('back.config');
 //Route::get('/back/mapping', 'NavController@toMapping')->name('back.mapping');

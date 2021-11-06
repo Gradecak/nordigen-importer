@@ -46,6 +46,7 @@ namespace App\Http\Controllers;
 
 use App\Services\Nordigen\Request\ListBanksRequest;
 use App\Services\Nordigen\Response\ErrorResponse;
+use App\Services\Nordigen\TokenManager;
 use GrumpyDictator\FFIIIApiSupport\Exceptions\ApiHttpException;
 use GrumpyDictator\FFIIIApiSupport\Request\SystemInformationRequest;
 use Illuminate\Contracts\View\Factory;
@@ -53,6 +54,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Redirector;
 use Illuminate\View\View;
+use Log;
 
 /**
  * Class TokenController
@@ -66,6 +68,7 @@ class TokenController extends Controller
      */
     public function doValidate(): JsonResponse
     {
+        Log::debug(sprintf('Now at %s', __METHOD__));
         $response = ['result' => 'OK', 'message' => null];
         $error    = $this->verifyFireflyIII();
         if (null !== $error) {
@@ -88,6 +91,7 @@ class TokenController extends Controller
      */
     private function verifyFireflyIII(): ?string
     {
+        Log::debug(sprintf('Now at %s', __METHOD__));
         // verify access
         $url     = (string)config('importer.url');
         $token   = (string)config('importer.access_token');
@@ -123,16 +127,20 @@ class TokenController extends Controller
      */
     private function verifyNordigen(): ?string
     {
-        $url     = config('importer.nordigen_url');
-        $token   = config('importer.nordigen_token');
-        $request = new ListBanksRequest($url, $token);
-        $request->setTimeOut(config('importer.connection.timeout'));
+        Log::debug(sprintf('Now at %s', __METHOD__));
 
-        $response = $request->get();
-        if ($response instanceof ErrorResponse) {
-            return sprintf('%s: %s', $response->class, $response->message);
+        // is there a valid access and refresh token?
+        if(TokenManager::hasValidRefreshToken() && TokenManager::hasValidAccessToken()) {
+            return null;
         }
 
+        if(TokenManager::hasExpiredRefreshToken()) {
+            // refresh!
+            TokenManager::getFreshAccessToken();
+        }
+
+        // get complete set!
+        TokenManager::getNewTokenSet();
         return null;
     }
 
@@ -143,6 +151,7 @@ class TokenController extends Controller
      */
     public function index()
     {
+        Log::debug(sprintf('Now at %s', __METHOD__));
         $pageTitle = 'Token error';
 
         // verify Firefly III

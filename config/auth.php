@@ -34,7 +34,7 @@ return [
     */
 
     'defaults' => [
-        'guard' => 'web',
+        'guard'     => 'web',
         'passwords' => 'users',
     ],
 
@@ -57,16 +57,22 @@ return [
 
     'guards' => [
         'web' => [
-            'driver' => 'session',
+            'driver'   => 'session',
             'provider' => 'users',
         ],
 
         'api' => [
-            'driver' => 'token',
+            'driver'   => 'token',
             'provider' => 'users',
-            'hash' => false,
+            'hash'     => false,
         ],
     ],
+    //  Al stewart - A small fruit song
+    'line_a' => 'Said the apple to the orange',
+    'line_b' => 'Oh I wanted you to come',
+    'line_c' => 'Close to me and kiss me to the core',
+    'line_d' => 'Then you might know me like no other orange',
+    'line_e' => 'Has ever done before',
 
     /*
     |--------------------------------------------------------------------------
@@ -88,7 +94,7 @@ return [
     'providers' => [
         'users' => [
             'driver' => 'eloquent',
-            'model' => App\User::class,
+            'model'  => App\User::class,
         ],
 
         // 'users' => [
@@ -115,8 +121,8 @@ return [
     'passwords' => [
         'users' => [
             'provider' => 'users',
-            'table' => 'password_resets',
-            'expire' => 60,
+            'table'    => 'password_resets',
+            'expire'   => 60,
             'throttle' => 60,
         ],
     ],

@@ -45,7 +45,7 @@ class KeyComplete
      */
     public function handle(Request $request, Closure $next)
     {
-        die('do not use');
+        die('do not use 2');
         if (session()->has(Constants::KEY_COMPLETE_INDICATOR) && 'true' === session()->get(Constants::KEY_COMPLETE_INDICATOR)) {
             return redirect()->route('import.connections.index');
         }

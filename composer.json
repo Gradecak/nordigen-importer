@@ -47,16 +47,17 @@
     "readme": "readme.md",
     "require": {
         "php": ">=8.0",
+        "ext-bcmath": "*",
+        "ext-json": "*",
+        "ext-openssl": "*",
         "fideloper/proxy": "^4.2",
+        "firefly-iii/api-support-classes": "dev-master",
         "fruitcake/laravel-cors": "^2.0",
         "guzzlehttp/guzzle": "^7",
         "laravel/framework": "^8.6",
         "laravel/tinker": "^2.0",
-        "rcrowe/twigbridge": "^0.12.1",
-        "firefly-iii/api-support-classes": "dev-master",
-        "ext-openssl": "*",
-        "ext-json": "*",
-        "ext-bcmath": "*"
+        "ramsey/uuid": "^4.2",
+        "rcrowe/twigbridge": "^0.12.1"
     },
     "authors": [
         {

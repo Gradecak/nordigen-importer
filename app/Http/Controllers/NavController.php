@@ -63,23 +63,33 @@ class NavController extends Controller
 //        return redirect(route('import.mapping.index'));
 //    }
 //
-//    /**
-//     * Redirect to index. Requires no special steps or middleware.
-//     */
-//    public function toStart()
-//    {
-//        return redirect(route('index'));
-//
-//    }
-//
-//    /**
-//     * @return Application|RedirectResponse|Redirector
-//     */
-//    public function toUpload()
-//    {
-//        session()->forget(Constants::HAS_UPLOAD);
-//
-//        return redirect(route('import.start'));
-//    }
+    /**
+     * Redirect to index. Requires no special steps or middleware.
+     */
+    public function toStart(): RedirectResponse
+    {
+        return redirect(route('index'));
+
+    }
+    /**
+     * Redirect to index. Requires no special steps or middleware.
+     */
+    public function toSelection(): RedirectResponse
+    {
+        return redirect(route('import.selection.index'));
+
+    }
+
+    /**
+     * Back to upload.
+     *
+     * @return RedirectResponse
+     */
+    public function toUpload(): RedirectResponse
+    {
+        session()->forget(Constants::HAS_UPLOAD);
+
+        return redirect(route('import.start'));
+    }
 
 }

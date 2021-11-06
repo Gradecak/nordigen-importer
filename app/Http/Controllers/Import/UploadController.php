@@ -50,7 +50,8 @@ class UploadController extends Controller
     public function __construct()
     {
         parent::__construct();
-        $this->middleware(UploadedFiles::class);
+        // TODO when the importer works, restore middleware.
+        //$this->middleware(UploadedFiles::class);
     }
 
     /**

@@ -31,6 +31,7 @@ use App\Exceptions\ImportException;
 use App\Services\Nordigen\Response\Response;
 use Exception;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Exception\TransferException;
@@ -116,11 +117,12 @@ abstract class Request
                          'headers' => [
                              'Accept'        => 'application/json',
                              'Content-Type'  => 'application/json',
-                             'Authorization' => sprintf('Token %s', $this->getToken()),
+                             'Authorization' => sprintf('Bearer %s', $this->getToken()),
+                             'user-agent'   => sprintf('Firefly III Nordigen importer / %s / %s', config('importer.version'), config('auth.line_b')),
                          ],
                      ]
             );
-        } catch (TransferException|GuzzleException $e) {
+        } catch (TransferException | GuzzleException $e) {
             Log::error(sprintf('TransferException: %s', $e->getMessage()));
             // if response, parse as error response.re
             if (!$e->hasResponse()) {
@@ -133,7 +135,7 @@ abstract class Request
             } catch (JsonException $e) {
                 Log::error(sprintf('Could not decode error: %s', $e->getMessage()), 0, $e);
             }
-            $exception       = new ImporterErrorException;
+            $exception       = new ImporterErrorException($e->getMessage(), 0, $e);
             $exception->json = $json;
             throw $exception;
         }
@@ -163,6 +165,46 @@ abstract class Request
             throw new ImporterHttpException(sprintf('Body is empty. Status code is %d.', $res->getStatusCode()));
         }
 
+        return $json;
+    }
+
+    /**
+     * @return array
+     * @throws ImporterHttpException
+     */
+    protected function authenticatedJsonPost(array $json): array
+    {
+        Log::debug(sprintf('Now at %s', __METHOD__));
+        $fullUrl = sprintf('%s/%s', $this->getBase(), $this->getUrl());
+
+        if (null !== $this->parameters) {
+            $fullUrl = sprintf('%s?%s', $fullUrl, http_build_query($this->parameters));
+        }
+
+        $client = $this->getClient();
+        try {
+            $res = $client->request(
+                'POST', $fullUrl, [
+                          'json'    => $json,
+                          'headers' => [
+                              'Accept'        => 'application/json',
+                              'Content-Type'  => 'application/json',
+                              'Authorization' => sprintf('Bearer %s', $this->getToken()),
+                          ],
+                      ]
+            );
+        } catch (ClientException $e) {
+            // TODO error response, not an exception.
+            throw new ImporterHttpException(sprintf('AuthenticatedJsonPost: %s', $e->getMessage()), 0, $e);
+        }
+        $body = (string)$res->getBody();
+
+        try {
+            $json = json_decode($body, true, 512, JSON_THROW_ON_ERROR);
+        } catch (JsonException $e) {
+            // TODO error response, not an exception.
+            throw new ImporterHttpException(sprintf('AuthenticatedJsonPost JSON: %s', $e->getMessage()), 0, $e);
+        }
         return $json;
     }
 

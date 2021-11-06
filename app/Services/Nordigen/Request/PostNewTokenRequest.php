@@ -1,6 +1,6 @@
 <?php
 /*
- * ListBanksRequest.php
+ * PostNewTokenRequest.php
  * Copyright (c) 2021 james@firefly-iii.org
  *
  * This file is part of the Firefly III Nordigen importer
@@ -20,55 +20,23 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-declare(strict_types=1);
-
-
 namespace App\Services\Nordigen\Request;
 
-use App\Exceptions\ImporterErrorException;
-use App\Exceptions\ImporterHttpException;
-use App\Services\Nordigen\Response\ListBanksResponse;
 use App\Services\Nordigen\Response\Response;
-use App\Services\Nordigen\Response\ErrorResponse;
+use App\Services\Nordigen\Response\TokenSetResponse;
+use GuzzleHttp\Client;
 
 /**
- * Class ListBanksRequest
+ * Class PostNewTokenRequest
  */
-class ListBanksRequest extends Request
+class PostNewTokenRequest extends Request
 {
-    /**
-     * ListCustomersRequest constructor.
-     *
-     * @param string $url
-     * @param string $token
-     */
-    public function __construct(string $url, string $token)
-    {
-        $this->setParameters([]);
-        $this->setBase($url);
-        $this->setToken($token);
-        $this->setUrl('api/v2/institutions/');
-    }
 
     /**
      * @inheritDoc
      */
     public function get(): Response
     {
-        try {
-            $response = $this->authenticatedGet();
-        } catch (ImporterErrorException $e) {
-            $error = [
-                'error' => [
-                    'message' =>$e->getMessage()
-                ]
-            ];
-            return new ErrorResponse($error);
-        } catch (ImporterHttpException $e) {
-            return new ErrorResponse($e->json ?? []);
-        }
-
-        return new ListBanksResponse($response);
     }
 
     /**
@@ -76,7 +44,25 @@ class ListBanksRequest extends Request
      */
     public function post(): Response
     {
-        // Implement post() method.
+        $url    = sprintf('%s/%s', config('importer.nordigen_url'), 'api/v2/token/new/');
+        $client = new Client;
+
+        $res = $client->post($url,
+                      [
+                          'json'    => [
+                              'secret_id'  => config('importer.nordigen_id'),
+                              'secret_key' => config('importer.nordigen_key'),
+                          ],
+                          'headers' => [
+                              'accept'       => 'application/json',
+                              'content-type' => 'application/json',
+                              'user-agent'   => sprintf('Firefly III Nordigen importer / %s / %s', config('importer.version'), config('auth.line_a')),
+                          ],
+                      ]
+        );
+        $body = (string)$res->getBody();
+        $json = json_decode($body, true, JSON_THROW_ON_ERROR);
+        return new TokenSetResponse($json);
     }
 
     /**
@@ -84,6 +70,5 @@ class ListBanksRequest extends Request
      */
     public function put(): Response
     {
-        // Implement put() method.
     }
 }

@@ -1,0 +1,46 @@
+{% extends "./layout/default" %}
+{% block content %}
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                &nbsp;
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title text-danger">The importer crashed :(</h5>
+                        <h6 class="card-subtitle mb-2 text-muted">v{{ version }}</h6>
+                        <p class="card-text">
+                            Firefly III Nordigen importer v{{ version }} crashed with the following message:
+                        </p>
+                        <p class="card-text">
+                            <code>{{ e.getMessage }}</code>
+                        </p>
+                        <p>
+                            The importer could not recover from this and has made it your problem. Sorry about that.
+                            Please check out the following resources in search for a solution.
+                        </p>
+                        <ul>
+                            <li>Docs</li>
+                            <li>Gitter.im chat</li>
+                            <li>GitHub discussions</li>
+                            <li>GitHub issues<br /><small>If you think this is a bug</small></li>
+                        </ul>
+                        <p>
+                            If you're a nerd of if you want to be very thorough when you talk about this issue, please find the "stacktrace" below. This will help
+                            debugging the issue. You can copy and paste it into a new issue. The <code>```</code> backticks are there on purpose, you can leave them in.
+                        </p>
+                        <textarea class="form-control" style="font-family:monospace;height:400px;font-size:8pt;">```
+{{ e.getTraceAsString }}
+```</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+<p>
+</p>
+{% endblock %}

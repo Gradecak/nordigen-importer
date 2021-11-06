@@ -22,12 +22,15 @@
 
 namespace App\Http\Controllers\Import;
 
+use App\Exceptions\ImporterErrorException;
+use App\Exceptions\ImporterHttpException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SelectionRequest;
 use App\Services\Configuration\Configuration;
 use App\Services\Nordigen\Request\ListBanksRequest;
+use App\Services\Nordigen\Response\ErrorResponse;
+use App\Services\Nordigen\TokenManager;
 use App\Services\Session\Constants;
-use App\Services\Spectre\Response\ErrorResponse;
 use App\Services\Storage\StorageService;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Http\Request;
@@ -43,24 +46,28 @@ class SelectionController extends Controller
 
     /**
      * @return Factory|View
+     * @throws ImporterErrorException
+     * @throws \App\Exceptions\ImporterHttpException
      */
     public function index()
     {
+        Log::debug(sprintf('Now at %s', __METHOD__));
         $countries = config('importer.countries');
         $mainTitle = 'Selection';
         $subTitle  = 'Select your country and the bank you wish to use.';
 
         // get banks and countries
-        $url     = config('importer.nordigen_url');
-        $token   = config('importer.nordigen_token');
-        $request = new ListBanksRequest($url, $token);
+        TokenManager::validateAllTokens();
+        $accessToken = TokenManager::getAccessToken();
+        $url         = config('importer.nordigen_url');
+
+        $request = new ListBanksRequest($url, $accessToken);
         $request->setTimeOut(config('importer.connection.timeout'));
 
         $response = $request->get();
         if ($response instanceof ErrorResponse) {
-            die('do something!');
+            throw new ImporterErrorException((string)$response->message);
         }
-
         return view('import.001-selection.index', compact('mainTitle', 'subTitle', 'response', 'countries'));
     }
 
@@ -69,6 +76,7 @@ class SelectionController extends Controller
      */
     public function post(SelectionRequest $request)
     {
+        Log::debug(sprintf('Now at %s', __METHOD__));
         // create a new config thing
         $configuration = Configuration::fromArray([]);
         if (session()->has(Constants::CONFIGURATION)) {
@@ -90,8 +98,8 @@ class SelectionController extends Controller
         session()->put(Constants::CONFIGURATION, $configuration->toArray());
         session()->put(Constants::SELECTED_BANK_COUNTRY, 'true');
 
-        // send to ???
-        return redirect(route('import.configure.index'));
+        // send to Nordigen for approval
+        return redirect(route('import.build-link.index'));
     }
 
 }

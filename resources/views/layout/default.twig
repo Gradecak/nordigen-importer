@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <base href="{{ route('index') }}/">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}?version={{ version }}">
+    <link rel="stylesheet" href="{{ asset('fa/css/all.css') }}?version={{ version }}">
+
+    <title>Firefly III Nordigen importer // {{ pageTitle|default('No title') }}</title>
+</head>
+<body>
+{% block content %}{% endblock %}
+
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<script src="{{ asset('js/jquery-3.4.1.min.js') }}?version={{ version }}"></script>
+<script src="{{ asset('js/popper.min.js') }}?version={{ version }}"></script>
+<script src="{{ asset('js/bootstrap.min.js') }}?version={{ version }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

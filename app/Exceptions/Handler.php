@@ -65,6 +65,10 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Throwable $exception)
     {
+        //$request->getTraceAsString();
+        if($exception instanceof ImporterErrorException || $exception instanceof ImporterHttpException || $exception instanceof ImportException) {
+            return response()->view('error', ['e' => $exception], 500);
+        }
         return parent::render($request, $exception);
     }
 
