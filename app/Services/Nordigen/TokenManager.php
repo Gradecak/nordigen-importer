@@ -140,7 +140,7 @@ class TokenManager
     /**
      *
      */
-    private static function getFreshAccessToken(): void
+    public static function getFreshAccessToken(): void
     {
         die(__METHOD__);
     }

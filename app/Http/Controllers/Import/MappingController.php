@@ -50,7 +50,7 @@ class MappingController extends Controller
     public function __construct()
     {
         parent::__construct();
-        app('view')->share('pageTitle', 'Map your Spectre data to Firefly III');
+        app('view')->share('pageTitle', 'Map your Nordigen data to Firefly III');
     }
 
     /**
@@ -59,7 +59,7 @@ class MappingController extends Controller
     public function index()
     {
         $mainTitle = 'Map data';
-        $subTitle  = 'Link Spectre information to Firefly III data.';
+        $subTitle  = 'Link Nordigen information to Firefly III data.';
 
         $configuration = Configuration::fromArray([]);
         if (session()->has(Constants::CONFIGURATION)) {

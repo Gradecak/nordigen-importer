@@ -160,7 +160,7 @@ class TokenController extends Controller
             return view('token.index', compact('errorMessage', 'pageTitle'));
         }
 
-        // verify Spectre:
+        // verify Nordigen:
         $errorMessage = $this->verifyNordigen();
 
         if (null !== $errorMessage) {

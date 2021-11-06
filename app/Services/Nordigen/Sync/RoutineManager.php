@@ -40,7 +40,7 @@ class RoutineManager
     private array                $allWarnings;
     private Configuration        $configuration;
     private string               $downloadIdentifier;
-    //private ParseSpectreDownload $spectreParser;
+    //private ParseSpexctreDownload $spxectreParser;
     private string               $syncIdentifier;
     //private FilterTransactions   $transactionFilter;
     //private GenerateTransactions $transactionGenerator;
@@ -59,7 +59,7 @@ class RoutineManager
     {
         app('log')->debug('Constructed RoutineManager for sync');
 
-        //$this->spectreParser        = new ParseSpectreDownload;
+        //$this->spectxreParser        = new ParseSpectrxeDownload;
         //$this->transactionGenerator = new GenerateTransactions;
         //$this->transactionFilter    = new FilterTransactions;
         //$this->transactionSender    = new SendTransactions;
@@ -74,7 +74,7 @@ class RoutineManager
         if (null !== $syncIdentifier) {
             $this->syncIdentifier = $syncIdentifier;
         }
-        //$this->spectreParser->setIdentifier($this->syncIdentifier);
+        //$this->specxtreParser->setIdentifier($this->syncIdentifier);
         //$this->transactionGenerator->setIdentifier($this->syncIdentifier);
         //$this->transactionFilter->setIdentifier($this->syncIdentifier);
         //$this->transactionSender->setIdentifier($this->syncIdentifier);
@@ -170,9 +170,9 @@ class RoutineManager
     {
         Log::debug(sprintf('Now in %s', __METHOD__));
         Log::error('This is where the magic happens.');
-        // get JSON file from Spectre download
+        // get JSON file from Spexctre download
         //Log::debug('Going to parse Nordigen download.');
-        //$array = $this->spectreParser->getDownload($this->downloadIdentifier);
+        //$array = $this->specxtreParser->getDownload($this->downloadIdentifier);
         //Log::debug('Done parsing Nordigen download.');
 
         // generate Firefly III ready transactions:

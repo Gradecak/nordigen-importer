@@ -50,7 +50,7 @@ class TransactionProcessor
      */
     public function download(): array
     {
-        $this->refreshConnection();
+        TokenManager::validateAllTokens();
         $this->notBefore = null;
         $this->notAfter  = null;
         if ('' !== (string) $this->configuration->getDateNotBefore()) {
@@ -79,14 +79,6 @@ class TransactionProcessor
         }
 
         return $return;
-    }
-
-    /**
-     * @throws SpectreHttpException
-     */
-    private function refreshConnection(): void
-    {
-        TokenManager::validateAllTokens();
     }
 
     /**
