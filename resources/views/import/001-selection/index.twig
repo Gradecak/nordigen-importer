@@ -1,0 +1,122 @@
+{% extends "./layout/default" %}
+{% block content %}
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                &nbsp;
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-12">
+                <h1>{{ mainTitle }}</h1>
+                <h2>{{ subTitle }}</h2>
+            </div>
+        </div>
+        <form method="post" action="{{ route('import.selection.post') }}" accept-charset="UTF-8" id="store">
+            <div class="row">
+                <div class="col-lg-12">
+                    <p class="lead">Select country</p>
+                    <p>
+                        Select country and bank
+                        If you would like some support, <a href="https://docs.firefly-iii.org/other-data-importers/"
+                                                           target="_blank">check out the documentation for this
+                            page.</a>
+                    </p>
+                    {% if not errors.isEmpty %}
+                        <p class="text-danger">Some error(s) occurred:</p>
+                        <ul>
+                            {% for error in errors.all %}
+                                <li class="text-danger">{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                    <hr/>
+                    <div class="row">
+                        <div class="col-lg-10">
+                            <input type="hidden" name="_token" value="{{ csrf_token() }}"/>
+
+                            <h4>Select country</h4>
+                            <div class="form-group row">
+                                <label for="country" class="col-sm-3 col-form-label">Country</label>
+                                <div class="col-sm-9">
+                                    <select class="form-control"
+                                            name="country"
+                                            id="country">
+                                        <option label="(no selection)" value="XX">(no selection)</option>
+                                        {% for country in response %}
+                                            <option label="{{ countries[country.code]|default('Unknown') }}"
+                                                    value="{{ country.code }}">{{ countries[country.code]|default('Unknown') }}</option>
+                                        {% endfor %}
+                                    </select>
+
+                                    <small id="countryHelp" class="form-text text-muted">
+                                        Which country is your bank in?
+                                    </small>
+                                </div>
+                            </div>
+                            <h4>Select bank</h4>
+
+                            {% for country in response %}
+                                <div class="bank-box" id="{{ country.code }}-box" style="display: none;">
+                                    <div class="form-group row">
+                                        <label for="bank_{{ country.code }}"
+                                               class="col-sm-3 col-form-label">Bank ({{ country.code }})</label>
+                                        <div class="col-sm-9">
+                                            <select class="form-control bank-selector"
+                                                    name="bank_{{ country.code }}"
+                                                    id="bank_{{ country.code }}">
+                                                <option label="(no bank)" value="XX">(no bank)</option>
+                                                {% for bank in country.banks %}
+                                                    <option label="{{ bank.name }}"
+                                                            value="{{ bank.id }}">{{ bank.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                            <div id="XX-box" class="bank-box" style="display: block;">
+                                <small id="noBankHelp" class="form-text text-muted">
+                                    (Please select a country first)
+                                </small>
+                                <p>&nbsp;</p>
+                            </div>
+                            <p>
+                            <p class="text-info bank-selected" style="display: none;">Imports from this bank go no further back than <strong class="days">XX</strong> days.</p>
+                            <p>&nbsp;</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-6">
+                    <!-- go back to upload -->
+                    <a href="{{ route('back.upload') }}" class="btn btn-secondary">&larr; Go back to upload</a>
+                    <br>
+                    <small class="text-muted">Changes on this page will not be saved.</small>
+                </div>
+                <div class="col-lg-6">
+                    <button type="submit" class="float-right btn btn-primary">Submit &rarr;</button>
+                </div>
+            </div>
+        </form>
+    </div>
+{% endblock %}
+{% block scripts %}
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#country').change(selectCountry)
+            $('.bank-selector').change(showDayCounter);
+        });
+
+        function showDayCounter() {
+            $('.bank-selected').show();
+        }
+
+        function selectCountry() {
+            var val = $('#country').val();
+            $('.bank-box').hide();
+            $('#' + val + '-box').show();
+        }
+    </script>
+{% endblock %}
