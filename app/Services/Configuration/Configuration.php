@@ -393,7 +393,13 @@ class Configuration
         return $this->doMapping;
     }
 
-
+    /**
+     * @return array
+     */
+    public function getAccounts(): array
+    {
+        return $this->accounts;
+    }
 
     /**
      * @param string $unit

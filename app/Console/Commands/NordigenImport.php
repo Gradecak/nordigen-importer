@@ -43,9 +43,8 @@ class NordigenImport extends Command
      *
      * @var string
      */
-    protected $description = 'Import from Spectre using a pre-defined configuration file.';
-    /** @var string */
-    protected $downloadIdentifier;
+    protected        $description = 'Import from Nordigen using a pre-defined configuration file.';
+    protected string $downloadIdentifier;
     /**
      * The name and signature of the console command.
      *
@@ -70,7 +69,6 @@ class NordigenImport extends Command
      */
     public function handle(): int
     {
-        die('todo');
         $access = $this->haveAccess();
         if (false === $access) {
             $this->error('Could not connect to your local Firefly III instance.');
@@ -105,10 +103,10 @@ class NordigenImport extends Command
         $this->line('Running...');
         $result = $this->startDownload($configuration);
         if (0 === $result) {
-            $this->line('Download from Spectre complete.');
+            $this->line('Download from Nordigen complete.');
         }
         if (0 !== $result) {
-            $this->warn('Download from Spectre resulted in errors.');
+            $this->warn('Download from Nordigen resulted in errors.');
 
             return $result;
         }

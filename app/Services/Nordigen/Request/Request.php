@@ -107,6 +107,8 @@ abstract class Request
         if (null !== $this->parameters) {
             $fullUrl = sprintf('%s?%s', $fullUrl, http_build_query($this->parameters));
         }
+        Log::debug(sprintf('authenticatedGet(%s)', $fullUrl));
+        Log::debug($this->getToken());
         $client = $this->getClient();
         $res    = null;
         $body   = null;

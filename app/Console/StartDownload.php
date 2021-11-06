@@ -24,10 +24,10 @@ declare(strict_types=1);
 
 namespace App\Console;
 
-use App\Exceptions\ImportException;
+use App\Exceptions\ImporterErrorException;
 use App\Services\Configuration\Configuration;
-use App\Services\Spectre\Download\JobStatus\JobStatusManager;
-use App\Services\Spectre\Download\RoutineManager as DownloadRoutineMananger;
+use App\Services\Nordigen\Download\JobStatus\JobStatusManager;
+use App\Services\Nordigen\Download\RoutineManager as DownloadRoutineManager;
 
 /**
  * Trait StartDownload.
@@ -41,26 +41,26 @@ trait StartDownload
      */
     protected function startDownload(array $configuration): int
     {
-        die('todo');
         app('log')->debug(sprintf('Now in %s', __METHOD__));
         $configObject = Configuration::fromFile($configuration);
 
-        // first download from Spectre
-        $manager = new DownloadRoutineMananger;
+        // first download from Nordigen
+        $manager = new DownloadRoutineManager;
 
         // start or find job using the downloadIdentifier:
-        JobStatusManager::startOrFindJob($manager->getDownloadIdentifier());
-
         try {
-            $manager->setConfiguration($configObject);
-        } catch (ImportException $e) {
+            JobStatusManager::startOrFindJob($manager->getDownloadIdentifier());
+        } catch (ImporterErrorException $e) {
             $this->error($e->getMessage());
 
             return 1;
         }
+
+        $manager->setConfiguration($configObject);
+
         try {
             $manager->start();
-        } catch (ImportException $e) {
+        } catch (ImporterErrorException $e) {
             $this->error($e->getMessage());
 
             return 1;
@@ -73,8 +73,6 @@ trait StartDownload
         $this->listMessages('ERROR', $errors);
         $this->listMessages('Warning', $warnings);
         $this->listMessages('Message', $messages);
-
-        $this->downloadIdentifier = $manager->getDownloadIdentifier();
 
         return 0;
     }

@@ -39,7 +39,6 @@ trait VerifyJSON
      */
     private function verifyJSON(string $file): bool
     {
-        die('todo');
         // basic check on the JSON.
         $json = file_get_contents($file);
         try {

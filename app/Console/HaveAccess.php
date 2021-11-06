@@ -37,7 +37,6 @@ trait HaveAccess
      */
     private function haveAccess(): bool
     {
-        die('todo');
         $url     = (string)config('importer.url');
         $token   = (string)config('importer.access_token');
         $request = new SystemInformationRequest($url, $token);

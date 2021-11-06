@@ -37,7 +37,6 @@ trait ManageMessages
      */
     protected function listMessages(string $key, array $messages): void
     {
-        die('todo');
         if (count($messages) > 0) {
             /**
              * @var int   $index

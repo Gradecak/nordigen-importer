@@ -37,6 +37,8 @@ use App\Services\Session\Constants;
 use Cache;
 use GrumpyDictator\FFIIIApiSupport\Model\Account as FFAccount;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use JsonException;
 use Log;
 
 /**
@@ -72,36 +74,35 @@ class ConfigurationController extends Controller
     }
 
 
+    /**
+     * @return Response
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \Psr\Container\NotFoundExceptionInterface
+     */
+    public function download(): Response
+    {
+        // do something
+        $result = '';
+        $config = Configuration::fromArray(session()->get(Constants::CONFIGURATION))->toArray();
+        try {
+            $result = json_encode($config, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT, 512);
+        } catch (JsonException $e) {
+            Log::error($e->getMessage());
+        }
 
+        $response = response($result);
+        $name     = sprintf('nordigen_import_config_%s.json', date('Y-m-d'));
+        $response->header('Content-disposition', 'attachment; filename=' . $name)
+                 ->header('Content-Type', 'application/json')
+                 ->header('Content-Description', 'File Transfer')
+                 ->header('Connection', 'Keep-Alive')
+                 ->header('Expires', '0')
+                 ->header('Cache-Control', 'must-revalidate, post-check=0, pre-check=0')
+                 ->header('Pragma', 'public')
+                 ->header('Content-Length', strlen($result));
 
-
-//    /**
-//     * @return ResponseFactory|Response
-//     */
-//    public function download()
-//    {
-//        // do something
-//        $result = '';
-//        $config = Configuration::fromArray(session()->get(Constants::CONFIGURATION))->toArray();
-//        try {
-//            $result = json_encode($config, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT, 512);
-//        } catch (JsonException $e) {
-//            Log::error($e->getMessage());
-//        }
-//
-//        $response = response($result);
-//        $name     = sprintf('spectre_import_config_%s.json', date('Y-m-d'));
-//        $response->header('Content-disposition', 'attachment; filename=' . $name)
-//                 ->header('Content-Type', 'application/json')
-//                 ->header('Content-Description', 'File Transfer')
-//                 ->header('Connection', 'Keep-Alive')
-//                 ->header('Expires', '0')
-//                 ->header('Cache-Control', 'must-revalidate, post-check=0, pre-check=0')
-//                 ->header('Pragma', 'public')
-//                 ->header('Content-Length', strlen($result));
-//
-//        return $response;
-//    }
+        return $response;
+    }
 
 
     /**

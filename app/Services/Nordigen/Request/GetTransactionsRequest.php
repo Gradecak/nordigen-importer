@@ -1,6 +1,6 @@
 <?php
 /*
- * GetAccountInformationRequest.php
+ * GetTransactionsRequest.php
  * Copyright (c) 2021 james@firefly-iii.org
  *
  * This file is part of the Firefly III Nordigen importer
@@ -22,11 +22,14 @@
 
 namespace App\Services\Nordigen\Request;
 
-use App\Exceptions\ImporterErrorException;
 use App\Services\Nordigen\Response\ArrayResponse;
+use App\Services\Nordigen\Response\GetTransactionsResponse;
 use App\Services\Nordigen\Response\Response;
 
-class GetAccountInformationRequest extends Request
+/**
+ * Class GetTransactionsRequest
+ */
+class GetTransactionsRequest extends Request
 {
     private string $identifier;
 
@@ -41,15 +44,7 @@ class GetAccountInformationRequest extends Request
         $this->setBase($url);
         $this->setToken($token);
         $this->setIdentifier($identifier);
-        $this->setUrl(sprintf('/api/v2/accounts/%s/transactions/', $identifier));
-    }
-
-    /**
-     * @return string
-     */
-    public function getIdentifier(): string
-    {
-        return $this->identifier;
+        $this->setUrl(sprintf('api/v2/accounts/%s/transactions/', $identifier));
     }
 
     /**
@@ -62,12 +57,24 @@ class GetAccountInformationRequest extends Request
 
     /**
      * @inheritDoc
-     * @throws ImporterErrorException
      */
     public function get(): Response
     {
-        $array = $this->authenticatedGet();
-        return new ArrayResponse($array);
+        $response = $this->authenticatedGet();
+        $keys     = ['booked', 'pending'];
+        $return   = [];
+        /** @var string $key */
+        foreach ($keys as $key) {
+            if (array_key_exists($key, $response['transactions'])) {
+                $set    = $response['transactions'][$key];
+                $set    = array_map(function (array $value) use ($key) {
+                    $value['key'] = $key;
+                    return $value;
+                }, $set);
+                $return = $return + $set;
+            }
+        }
+        return new GetTransactionsResponse($return);
     }
 
     /**

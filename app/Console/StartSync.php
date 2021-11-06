@@ -41,11 +41,10 @@ trait StartSync
      */
     private function startSync(array $configuration): int
     {
-        die('todo');
         app('log')->debug(sprintf('Now in %s', __METHOD__));
         $configObject = Configuration::fromFile($configuration);
 
-        // first download from Spectre
+        // first download from Nordigen
         $manager = new SyncRoutineManager;
         $manager->setDownloadIdentifier($this->downloadIdentifier);
 

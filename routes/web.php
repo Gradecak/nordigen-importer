@@ -45,6 +45,8 @@ Route::get('/import/link-callback', ['uses' => 'Import\LinkController@callback',
 // 003 configure import for each account we got permission to:
 Route::get('/import/configuration', ['uses' => 'Import\ConfigurationController@index', 'as' => 'import.configure.index']);
 Route::post('/import/configuration', ['uses' => 'Import\ConfigurationController@post', 'as' => 'import.configure.post']);
+Route::get('/configuration/download', ['uses' => 'Import\ConfigurationController@download', 'as' => 'import.configuration.download']);
+
 
 // 004 download transactions:
 Route::get('/import/download/index', ['uses' => 'Import\DownloadController@index', 'as' => 'import.download.index']);
@@ -71,7 +73,6 @@ Route::get('/import/mapping', ['uses' => 'Import\MappingController@index', 'as' 
 //
 
 // download config:
-//Route::get('/configuration/download', ['uses' => 'Import\ConfigurationController@download', 'as' => 'import.configuration.download']);
 
 // map data:
 //
