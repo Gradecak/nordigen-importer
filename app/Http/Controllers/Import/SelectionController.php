@@ -23,7 +23,6 @@
 namespace App\Http\Controllers\Import;
 
 use App\Exceptions\ImporterErrorException;
-use App\Exceptions\ImporterHttpException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SelectionRequest;
 use App\Services\Configuration\Configuration;
@@ -66,7 +65,7 @@ class SelectionController extends Controller
 
         $response = $request->get();
         if ($response instanceof ErrorResponse) {
-            throw new ImporterErrorException((string)$response->message);
+            throw new ImporterErrorException((string) $response->message);
         }
         return view('import.001-selection.index', compact('mainTitle', 'subTitle', 'response', 'countries'));
     }
@@ -83,6 +82,12 @@ class SelectionController extends Controller
             $configuration = Configuration::fromArray(session()->get(Constants::CONFIGURATION));
         }
         $values = $request->getAll();
+
+        // overrule with sandbox?
+        if (config('importer.use_sandbox')) {
+            $values['bank'] = 'SANDBOXFINANCE_SFIN0000';
+        }
+
         $configuration->setCountry($values['country']);
         $configuration->setBank($values['bank']);
 

@@ -41,7 +41,7 @@ class FilterTransactions
      */
     public function __construct()
     {
-        die('do not use');
+        die('do not use6');
     }
 
     /**

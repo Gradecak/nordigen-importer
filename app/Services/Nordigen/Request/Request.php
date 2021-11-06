@@ -279,7 +279,7 @@ abstract class Request
      */
     protected function sendSignedSpectrePost(array $data): array
     {
-        die('do not use');
+        die('do not use 33');
         if ('' === $this->url) {
             throw new ImportException('No Spectre server defined');
         }
@@ -327,7 +327,7 @@ abstract class Request
      */
     protected function getDefaultHeaders(): array
     {
-        die('do not use');
+        die('do not use 44');
         $userAgent       = sprintf('FireflyIII Nordigen v%s', config('importer.version'));
         $this->expiresAt = time() + 180;
 
@@ -352,7 +352,7 @@ abstract class Request
      */
     protected function sendUnsignedSpectrePost(array $data): array
     {
-        die('do not use');
+        die('do not use 55');
         if ('' === $this->url) {
             throw new ImportException('No Spectre server defined');
         }
@@ -410,7 +410,7 @@ abstract class Request
      */
     protected function sendUnsignedSpectrePut(array $data): array
     {
-        die('do not use');
+        die('do not use 66');
         if ('' === $this->url) {
             throw new ImportException('No Spectre server defined');
         }

@@ -26,12 +26,12 @@
                 <div class="card-header">Status window</div>
                 <div class="card-body" v-if="'waiting_to_start' === this.status && false === this.triedToStart">
                     <p>
-                        The tool is ready to download your transactions from Spectre. Please wait...
+                        The tool is ready to download your transactions from Nordigen. Please wait...
                     </p>
                 </div>
                 <div class="card-body" v-if="'waiting_to_start' === this.status && true === this.triedToStart">
                     <p>
-                        The tool is ready to download your transactions from Spectre. Please wait...
+                        The tool is ready to download your transactions from Nordigen. Please wait...
                     </p>
                 </div>
                 <div class="card-body" v-if="'job_running' === this.status">
@@ -39,7 +39,8 @@
                         Download is in progress, please wait...
                     </p>
                     <div class="progress">
-                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="100" aria-valuemin="0"
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar"
+                             aria-valuenow="100" aria-valuemin="0"
                              aria-valuemax="100" style="width: 100%"></div>
                     </div>
                     <download-messages
@@ -61,7 +62,8 @@
                 </div>
                 <div class="card-body" v-if="'error' === this.status && true === this.triedToStart">
                     <p class="text-danger">
-                        The job could not be started or failed due to an error. Please check the log files. Sorry about this :(.
+                        The job could not be started or failed due to an error. Please check the log files. Sorry about
+                        this :(.
                     </p>
                     <download-messages
                         :messages="this.messages"
@@ -75,77 +77,77 @@
 </template>
 
 <script>
-    export default {
-        name: "DownloadStatus",
-        /*
-    * The component's data.
-    */
-        data() {
-            return {
-                triedToStart: false,
-                status: '',
-                messages: [],
-                warnings: [],
-                errors: [],
-                downloadUrl: window.configDownloadUrl,
-                flushUrl: window.flushUrl
-            };
-        },
-        props: [],
-        mounted() {
-            console.log(`Mounted, check job at ${downloadStatusUrl}.`);
-            this.getJobStatus();
-            this.callStart();
-        },
-        methods: {
-            getJobStatus: function () {
-                console.log('getJobStatus');
-                axios.get(downloadStatusUrl).then((response) => {
-                    // handle success
-                    this.status = response.data.status;
-                    this.errors = response.data.errors;
-                    this.warnings = response.data.warnings;
-                    this.messages = response.data.messages;
-                    console.log(`Job status is ${this.status}.`);
-                    if (false === this.triedToStart && 'waiting_to_start' === this.status) {
-                        // call to job start.
-                        console.log('Job hasn\'t started yet. Show user some info');
+export default {
+    name: "DownloadStatus",
+    /*
+* The component's data.
+*/
+    data() {
+        return {
+            triedToStart: false,
+            status: '',
+            messages: [],
+            warnings: [],
+            errors: [],
+            downloadUrl: window.configDownloadUrl,
+            flushUrl: window.flushUrl
+        };
+    },
+    props: [],
+    mounted() {
+        console.log(`Mounted, check job at ${downloadStatusUrl}.`);
+        this.getJobStatus();
+        //this.callStart();
+    },
+    methods: {
+        getJobStatus: function () {
+            console.log('getJobStatus');
+            axios.get(downloadStatusUrl).then((response) => {
+                // handle success
+                this.status = response.data.status;
+                this.errors = response.data.errors;
+                this.warnings = response.data.warnings;
+                this.messages = response.data.messages;
+                console.log(`Job status is ${this.status}.`);
+                if (false === this.triedToStart && 'waiting_to_start' === this.status) {
+                    // call to job start.
+                    console.log('Job hasn\'t started yet. Show user some info');
+                    return;
+                }
+                if (true === this.triedToStart && 'waiting_to_start' === this.status) {
+                    console.log('Job hasn\'t started yet.');
+                }
+                if ('job_done' === this.status) {
+                    console.log('Job is done!');
+                    if (
+                        this.warnings.length === 0 &&
+                        this.errors.length === 0
+                    ) {
+                        window.location = mappingUrl;
                         return;
                     }
-                    if (true === this.triedToStart && 'waiting_to_start' === this.status) {
-                        console.log('Job hasn\'t started yet.');
-                    }
-                    if ('job_done' === this.status) {
-                        console.log('Job is done!');
-                        if (
-                            this.warnings.length === 0 &&
-                            this.errors.length === 0
-                        ) {
-                            window.location = mappingUrl;
-                            return;
-                        }
-                        return;
-                    }
+                    return;
+                }
 
-                    setTimeout(function () {
-                        console.log('Fired on setTimeout');
-                        this.getJobStatus();
-                    }.bind(this), 1000);
-                });
-            },
-            callStart: function () {
-                console.log('Call job start URL: ' + downloadStartUrl);
-                axios.post(downloadStartUrl).then((response) => {
+                setTimeout(function () {
+                    console.log('Fired on setTimeout');
                     this.getJobStatus();
-                }).catch((error) => {
-                    this.status = 'error';
-                });
-                this.getJobStatus();
-                this.triedToStart = true;
-            },
+                }.bind(this), 1000);
+            });
         },
-        watch: {}
-    }
+        callStart: function () {
+            console.log('Call job start URL: ' + downloadStartUrl);
+            axios.post(downloadStartUrl).then((response) => {
+                this.getJobStatus();
+            }).catch((error) => {
+                this.status = 'error';
+            });
+            this.getJobStatus();
+            this.triedToStart = true;
+        },
+    },
+    watch: {}
+}
 </script>
 
 <style scoped>

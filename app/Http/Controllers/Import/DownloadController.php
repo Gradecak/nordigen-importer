@@ -25,7 +25,6 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Import;
 
 
-use App\Exceptions\ImportException;
 use App\Http\Controllers\Controller;
 use App\Services\Configuration\Configuration;
 use App\Services\Session\Constants;
@@ -34,6 +33,7 @@ use App\Services\Spectre\Download\JobStatus\JobStatusManager;
 use App\Services\Spectre\Download\RoutineManager;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Log;
 
 /**
  * Class DownloadController
@@ -46,26 +46,29 @@ class DownloadController extends Controller
     public function __construct()
     {
         parent::__construct();
-        app('view')->share('pageTitle', 'Download transactions from Spectre');
+        app('view')->share('pageTitle', 'Download transactions from Nordigen');
     }
 
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \Psr\Container\NotFoundExceptionInterface
+     * @throws \App\Exceptions\ImporterErrorException
+     */
     public function index()
     {
         app('log')->debug(sprintf('Now at %s', __METHOD__));
         $mainTitle = 'Downloading transactions...';
-        $subTitle  = 'Connecting to Spectre and downloading your data...';
-        $routine   = null;
+        $subTitle  = 'Connecting to Nordigen and downloading your data...';
+
         // job ID may be in session:
         $downloadIdentifier = session()->get(Constants::DOWNLOAD_JOB_IDENTIFIER);
         if (null === $downloadIdentifier) {
+            Log::debug('No download identifier in session.');
             // create a new download job:
             $routine            = new RoutineManager;
             $downloadIdentifier = $routine->getDownloadIdentifier();
         }
-
-        // experimental get config TODO remove me.
-        $config        = session()->get(Constants::CONFIGURATION) ?? [];
-        $configuration = Configuration::fromArray($config);
+        Log::debug(sprintf('Download identifier is %s.', $downloadIdentifier));
 
         // call thing:
         JobStatusManager::startOrFindJob($downloadIdentifier);
@@ -76,7 +79,7 @@ class DownloadController extends Controller
         session()->put(Constants::DOWNLOAD_JOB_IDENTIFIER, $downloadIdentifier);
         app('log')->debug(sprintf('Stored "%s" under "%s"', $downloadIdentifier, Constants::DOWNLOAD_JOB_IDENTIFIER));
 
-        return view('import.download.index', compact('mainTitle', 'subTitle', 'downloadIdentifier'));
+        return view('import.004-download.index', compact('mainTitle', 'subTitle', 'downloadIdentifier'));
     }
 
     /**
@@ -102,12 +105,9 @@ class DownloadController extends Controller
         }
         JobStatusManager::setJobStatus(JobStatus::JOB_RUNNING);
 
-        try {
-            $config = session()->get(Constants::CONFIGURATION) ?? [];
-            $routine->setConfiguration(Configuration::fromArray($config));
-            $routine->start();
-        } catch (ImportException $e) {
-        }
+        $config = session()->get(Constants::CONFIGURATION) ?? [];
+        $routine->setConfiguration(Configuration::fromArray($config));
+        $routine->start();
 
         // set done:
         JobStatusManager::setJobStatus(JobStatus::JOB_DONE);

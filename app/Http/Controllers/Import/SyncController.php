@@ -142,6 +142,7 @@ class SyncController extends Controller
         }
 
         // set done:
+        die('wants to finish job');
         JobStatusManager::setJobStatus(JobStatus::JOB_DONE);
 
         return response()->json($downloadJobStatus->toArray());

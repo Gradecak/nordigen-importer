@@ -102,14 +102,11 @@ class LinkController extends Controller
             $configuration = Configuration::fromArray(session()->get(Constants::CONFIGURATION));
         }
         $requisition = $configuration->getRequisition($reference);
-        if(null === $requisition) {
+        if (null === $requisition) {
             throw new ImporterErrorException('No such requisition.');
         }
         // continue!
-        
-        echo '<pre>';
-        var_dump($configuration->toArray());
-
-        //Log::debug(sprintf('Stored identifier is %s', $configuration->getLatest)
+        session()->put(Constants::REQUISITION_REFERENCE, $reference);
+        return redirect(route('import.configure.index'));
     }
 }

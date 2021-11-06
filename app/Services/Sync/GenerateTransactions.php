@@ -62,7 +62,7 @@ class GenerateTransactions
         $this->targetAccounts = [];
         $this->targetTypes    = [];
         bcscale(12);
-        die('do not use');
+        die('do not use 8');
     }
 
     /**

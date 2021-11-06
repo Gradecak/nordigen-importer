@@ -44,7 +44,7 @@ class ParseSpectreDownload
      */
     public function getDownload(string $downloadIdentifier): array
     {
-        die('do not use');
+        die('do not use9');
         $disk   = Storage::disk('downloads');
         $result = [];
         $count  = 0;

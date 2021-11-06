@@ -76,7 +76,7 @@ trait ProgressInformation
      */
     protected function addError(int $index, string $error): void
     {
-        die('do not use');
+        die('do not use16');
         $this->errors           = $this->errors ?? [];
         $this->errors[$index]   = $this->errors[$index] ?? [];
         $this->errors[$index][] = $error;
@@ -92,7 +92,7 @@ trait ProgressInformation
      */
     protected function addMessage(int $index, string $message): void
     {
-        die('do not use');
+        die('do not use msg');
         $this->messages           = $this->messages ?? [];
         $this->messages[$index]   = $this->messages[$index] ?? [];
         $this->messages[$index][] = $message;
@@ -108,7 +108,7 @@ trait ProgressInformation
      */
     protected function addWarning(int $index, string $warning): void
     {
-        die('do not use');
+        die('do not use xya ');
         $this->warnings           = $this->warnings ?? [];
         $this->warnings[$index]   = $this->warnings[$index] ?? [];
         $this->warnings[$index][] = $warning;

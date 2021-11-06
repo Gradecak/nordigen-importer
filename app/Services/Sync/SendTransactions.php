@@ -59,7 +59,7 @@ class SendTransactions
      */
     public function send(array $transactions): array
     {
-        die('do not use');
+        die('do not use12');
         // create the tag, to be used later on.
         $this->tag     = sprintf('Spectre Import on %s', date('Y-m-d \@ H:i'));
         $this->tagDate = date('Y-m-d');

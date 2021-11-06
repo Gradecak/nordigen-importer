@@ -67,6 +67,14 @@ class Constants
     // to indicate a bank has been chosen
     public const SELECTED_BANK_COUNTRY = 'selected_bank_country';
 
+    // reference to the currently used requisition:
+    public const REQUISITION_REFERENCE = 'requisition_reference';
+
+    // user has completed configuration.
+    public const CONFIG_COMPLETE_INDICATOR = 'config_complete';
+
+    // key under which download identifier (cache thing) is stored
+    public const DOWNLOAD_JOB_IDENTIFIER = 'download_job_id';
 
 //    /** @var string */
 //    /** @var string */
@@ -79,13 +87,13 @@ class Constants
 //    /** @var string */
 //    /** @var string */
 //    /** @var string */
-//    public const CONFIG_COMPLETE_INDICATOR = 'config_complete';
+
 //    /** @var string string */
 //    public const ROLES_COMPLETE_INDICATOR = 'role_config_complete';
 //    /** @var string */
 //    public const KEY_COMPLETE_INDICATOR = 'key_complete';
 //    /** @var string */
-//    public const DOWNLOAD_JOB_IDENTIFIER = 'download_job_id';
+//
 //
 //    /** @var string */
 //    public const SYNC_JOB_IDENTIFIER = 'sync_job_id';

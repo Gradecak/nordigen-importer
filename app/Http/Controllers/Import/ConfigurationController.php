@@ -24,19 +24,19 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Import;
 
-
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ConfigurationPostRequest;
 use App\Services\Configuration\Configuration;
+use App\Services\FireflyIII\Services\AssetAccountCollector;
+use App\Services\Nordigen\Model\Account;
+use App\Services\Nordigen\Request\ListAccountsRequest;
+use App\Services\Nordigen\Response\ListAccountsResponse;
+use App\Services\Nordigen\Services\AccountInformationCollector;
+use App\Services\Nordigen\TokenManager;
 use App\Services\Session\Constants;
-use App\Services\Spectre\Model\Account;
-use App\Services\Spectre\Request\GetAccountsRequest as SpectreGetAccountsRequest;
-use GrumpyDictator\FFIIIApiSupport\Request\GetAccountsRequest;
-use Illuminate\Contracts\Routing\ResponseFactory;
-use Illuminate\Http\RedirectResponse;
+use Cache;
+use GrumpyDictator\FFIIIApiSupport\Model\Account as FFAccount;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
-use JsonException;
 use Log;
 
 /**
@@ -44,96 +44,65 @@ use Log;
  */
 class ConfigurationController extends Controller
 {
-
-    /**
-     * @return ResponseFactory|Response
-     */
-    public function download()
-    {
-        // do something
-        $result = '';
-        $config = Configuration::fromArray(session()->get(Constants::CONFIGURATION))->toArray();
-        try {
-            $result = json_encode($config, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT, 512);
-        } catch (JsonException $e) {
-            Log::error($e->getMessage());
-        }
-
-        $response = response($result);
-        $name     = sprintf('spectre_import_config_%s.json', date('Y-m-d'));
-        $response->header('Content-disposition', 'attachment; filename=' . $name)
-                 ->header('Content-Type', 'application/json')
-                 ->header('Content-Description', 'File Transfer')
-                 ->header('Connection', 'Keep-Alive')
-                 ->header('Expires', '0')
-                 ->header('Cache-Control', 'must-revalidate, post-check=0, pre-check=0')
-                 ->header('Pragma', 'public')
-                 ->header('Content-Length', strlen($result));
-
-        return $response;
-    }
-
     /**
      * @param Request $request
-     *
-     * @return RedirectResponse
      */
     public function index(Request $request)
     {
-        app('log')->debug(sprintf('Now at %s', __METHOD__));
-        $mainTitle = 'Import from Spectre';
-        $subTitle  = 'Configure your Spectre import';
+        Log::debug(sprintf('Now at %s', __METHOD__));
+        $mainTitle = 'Import from Nordigen';
+        $subTitle  = 'Configure your Nordigen import';
         $pageTitle = 'Configuration';
 
         $configuration = Configuration::fromArray([]);
         if (session()->has(Constants::CONFIGURATION)) {
             $configuration = Configuration::fromArray(session()->get(Constants::CONFIGURATION));
         }
-        // if config says to skip it, skip it:
-        $overruleSkip = 'true' === $request->get('overruleskip');
-        if (null !== $configuration && true === $configuration->isSkipForm() && false === $overruleSkip) {
-            // skipForm
-            return redirect()->route('import.download.index');
-        }
 
-        // get list of asset accounts in Firefly III
-        $url         = (string)config('importer.url');
-        $token       = (string)config('importer.access_token');
-        $accountList = new GetAccountsRequest($url, $token);
+        // list all accounts in Nordigen:
+        $reference        = $configuration->getRequisition(session()->get(Constants::REQUISITION_REFERENCE));
+        $nordigenAccounts = $this->getNordigenAccounts($reference);
+        $fireflyAccounts  = AssetAccountCollector::collectAssetAccounts();
 
-        $accountList->setVerify(config('importer.connection.verify'));
-        $accountList->setTimeOut(config('importer.connection.timeout'));
+        // merge if necessary (will block some options)
+        $nordigenAccounts = $this->mergeAccountLists($nordigenAccounts, $fireflyAccounts);
 
-        $accountList->setType(GetAccountsRequest::ASSET);
-        $ff3Accounts = $accountList->get();
-
-        // add Firefly III URL's:
-        /** @var \GrumpyDictator\FFIIIApiSupport\Model\Account $ff3Account */
-        foreach ($ff3Accounts as $ff3Account) {
-            $ff3Account->url = sprintf('%saccounts/show/%d', config('importer.url'), $ff3Account->id);
-        }
-
-        // get the accounts over at Spectre.
-        $url                     = config('importer.spectre_url');
-        $appId                   = config('importer.spectre_app_id');
-        $secret                  = config('importer.spectre_secret');
-        $spectreList             = new SpectreGetAccountsRequest($url, $appId, $secret);
-        $spectreList->connection = $configuration->getConnection();
-        $spectreAccountList      = $spectreList->get();
-
-        /** @var Account $spectreAccount */
-        foreach ($spectreAccountList as $spectreAccount) {
-            /** @var \GrumpyDictator\FFIIIApiSupport\Model\Account $ff3Account */
-            foreach ($ff3Accounts as $ff3Account) {
-                if ($spectreAccount->iban === $ff3Account->iban) {
-                    $spectreAccount->matched = true;
-                }
-            }
-        }
-
-        // view for config:
-        return view('import.configuration.index', compact('ff3Accounts', 'spectreAccountList', 'configuration', 'mainTitle', 'subTitle', 'pageTitle'));
+        // show index.
+        return view('import.003-configuration.index', compact('fireflyAccounts', 'nordigenAccounts', 'configuration', 'mainTitle', 'subTitle', 'pageTitle'));
     }
+
+
+
+
+
+//    /**
+//     * @return ResponseFactory|Response
+//     */
+//    public function download()
+//    {
+//        // do something
+//        $result = '';
+//        $config = Configuration::fromArray(session()->get(Constants::CONFIGURATION))->toArray();
+//        try {
+//            $result = json_encode($config, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT, 512);
+//        } catch (JsonException $e) {
+//            Log::error($e->getMessage());
+//        }
+//
+//        $response = response($result);
+//        $name     = sprintf('spectre_import_config_%s.json', date('Y-m-d'));
+//        $response->header('Content-disposition', 'attachment; filename=' . $name)
+//                 ->header('Content-Type', 'application/json')
+//                 ->header('Content-Description', 'File Transfer')
+//                 ->header('Connection', 'Keep-Alive')
+//                 ->header('Expires', '0')
+//                 ->header('Cache-Control', 'must-revalidate, post-check=0, pre-check=0')
+//                 ->header('Pragma', 'public')
+//                 ->header('Content-Length', strlen($result));
+//
+//        return $response;
+//    }
+
 
     /**
      * @param Request $request
@@ -151,26 +120,30 @@ class ConfigurationController extends Controller
             $configuration = Configuration::fromArray(session()->get(Constants::CONFIGURATION));
         }
 
-        // update config
-        $configuration->setRules($fromRequest['rules']);
-        $configuration->setSkipForm($fromRequest['skip_form']);
-        if (null !== $fromRequest['date_not_after']) {
-            $configuration->setDateNotAfter($fromRequest['date_not_after']->format('Y-m-d'));
-        }
+        // update config, all except accounts
+        $configuration->setDateRange($fromRequest['date_range']);
+        $configuration->setDateRangeNumber($fromRequest['date_range_number']);
+        $configuration->setDateRangeUnit($fromRequest['date_range_unit']);
+
         if (null !== $fromRequest['date_not_before']) {
             $configuration->setDateNotBefore($fromRequest['date_not_before']->format('Y-m-d'));
         }
-        $configuration->setDateRangeNumber($fromRequest['date_range_number']);
-        $configuration->setDateRangeUnit($fromRequest['date_range_unit']);
-        $configuration->setDateRange($fromRequest['date_range']);
+        if (null !== $fromRequest['date_not_after']) {
+            $configuration->setDateNotAfter($fromRequest['date_not_after']->format('Y-m-d'));
+        }
+
+        $configuration->setRules($fromRequest['rules']);
+        $configuration->setAddImportTag($fromRequest['add_import_tag']);
+        $configuration->setIgnoreDuplicateTransactions($fromRequest['ignore_duplicate_transactions']);
         $configuration->setDoMapping($fromRequest['do_mapping']);
-        $configuration->setIgnoreSpectreCategories($fromRequest['ignore_spectre_categories']);
+        $configuration->setSkipForm($fromRequest['skip_form']);
 
         // loop accounts:
+
         $accounts = [];
-        foreach (array_keys($fromRequest['do_import']) as $accountId) {
-            if (isset($fromRequest['accounts'][$accountId])) {
-                $accounts[$accountId] = (int)$fromRequest['accounts'][$accountId];
+        foreach (array_keys($fromRequest['do_import']) as $identifier) {
+            if (isset($fromRequest['accounts'][$identifier])) {
+                $accounts[$identifier] = (int) $fromRequest['accounts'][$identifier];
             }
         }
         $configuration->setAccounts($accounts);
@@ -184,4 +157,124 @@ class ConfigurationController extends Controller
         // redirect to import things?
         return redirect()->route('import.download.index');
     }
+
+    /**
+     * List Nordigen accounts with account details, balances, and 2 transactions (if present)
+     * @return array
+     */
+    private function getNordigenAccounts(string $identifier): array
+    {
+        if (Cache::has($identifier)) {
+            return Cache::get($identifier);
+        }
+        Log::debug(sprintf('Now in %s', __METHOD__));
+        // get banks and countries
+        TokenManager::validateAllTokens();
+        $accessToken = TokenManager::getAccessToken();
+        $url         = config('importer.nordigen_url');
+        $request     = new ListAccountsRequest($url, $identifier, $accessToken);
+        /** @var ListAccountsResponse $response */
+        $response = $request->get();
+        $total    = count($response);
+        $return   = [];
+        Log::debug(sprintf('Found %d accounts.', $total));
+
+        /** @var Account $account */
+        foreach ($response as $index => $account) {
+            Log::debug(sprintf('[%d/%d] Now collecting information for account %s', ($index + 1), $total, $account->getIdentifier()));
+            $account  = AccountInformationCollector::collectInformation($account);
+            $return[] = $account;
+        }
+        Cache::put($identifier, $return, 120);
+        return $return;
+    }
+
+    /**
+     * @param array $nordigen
+     * @param array $firefly
+     * @return array
+     *
+     * TODO move to some helper.
+     */
+    private function mergeAccountLists(array $nordigen, array $firefly): array
+    {
+        Log::debug('Now creating account lists.');
+        $return = [];
+        /** @var Account $nordigenAccount */
+        foreach ($nordigen as $nordigenAccount) {
+            Log::debug(sprintf('Now working on account "%s": "%s"', $nordigenAccount->getName(), $nordigenAccount->getIdentifier()));
+            $iban     = $nordigenAccount->getIban();
+            $currency = $nordigenAccount->getCurrency();
+            $entry    = [
+                'nordigen' => $nordigenAccount,
+                'firefly'  => [],
+            ];
+
+            // only iban?
+            $filteredByIban = $this->filterByIban($firefly, $iban);
+
+            if (1 === count($filteredByIban)) {
+                Log::debug(sprintf('This account (%s) has a single Firefly III counter part (#%d, "%s", same IBAN), so will use that one.', $iban, $filteredByIban[0]->id, $filteredByIban[0]->name));
+                $entry['firefly'] = $filteredByIban;
+                $return[]         = $entry;
+                continue;
+            }
+            Log::debug(sprintf('Found %d accounts with the same IBAN ("%s")', count($filteredByIban), $iban));
+
+            // only currency?
+            $filteredByCurrency = $this->filterByCurrency($firefly, $currency);
+
+            if (count($filteredByCurrency) > 0) {
+                Log::debug(sprintf('This account (%s) has some Firefly III counter parts with the same currency so will only use those.', $currency));
+                $entry['firefly'] = $filteredByCurrency;
+                $return[]         = $entry;
+                continue;
+            }
+            Log::debug('No special filtering on the Firefly III account list.');
+            $entry['firefly'] = $firefly;
+            $return[]         = $entry;
+        }
+        return $return;
+    }
+
+    /**
+     * @param array  $firefly
+     * @param string $iban
+     * @return array
+     */
+    private function filterByIban(array $firefly, string $iban): array
+    {
+        if ('' === $iban) {
+            return [];
+        }
+        $result = [];
+        /** @var FFAccount $account */
+        foreach ($firefly as $account) {
+            if ($iban === $account->iban) {
+                $result[] = $account;
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * @param array  $firefly
+     * @param string $currency
+     * @return array
+     */
+    private function filterByCurrency(array $firefly, string $currency): array
+    {
+        if ('' === $currency) {
+            return [];
+        }
+        $result = [];
+        /** @var FFAccount $account */
+        foreach ($firefly as $account) {
+            if ($currency === $account->currencyCode) {
+                $result[] = $account;
+            }
+        }
+        return $result;
+    }
+
 }

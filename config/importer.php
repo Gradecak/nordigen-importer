@@ -34,9 +34,10 @@ return [
     'vanity_url'      => envNonEmpty('VANITY_URL'),
     'upload_path'     => storage_path('uploads'),
     'minimum_version' => '5.5.0',
-    'nordigen_id'  => env('NORDIGEN_ID', ''),
-    'nordigen_key'  => env('NORDIGEN_KEY', ''),
+    'nordigen_id'     => env('NORDIGEN_ID', ''),
+    'nordigen_key'    => env('NORDIGEN_KEY', ''),
     'nordigen_url'    => 'https://ob.nordigen.com',
+    'use_sandbox'     => env('USE_SANDBOX'),
     'skip_key_step'   => false,
     'trusted_proxies' => env('TRUSTED_PROXIES', ''),
     'connection'      => [

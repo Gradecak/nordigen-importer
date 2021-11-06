@@ -42,6 +42,20 @@ Route::post('/import/selection/submit', ['uses' => 'Import\SelectionController@p
 Route::get('/import/build-link', ['uses' => 'Import\LinkController@build', 'as' => 'import.build-link.index']);
 Route::get('/import/link-callback', ['uses' => 'Import\LinkController@callback', 'as' => 'import.build-link.callback']);
 
+// 003 configure import for each account we got permission to:
+Route::get('/import/configuration', ['uses' => 'Import\ConfigurationController@index', 'as' => 'import.configure.index']);
+Route::post('/import/configuration', ['uses' => 'Import\ConfigurationController@post', 'as' => 'import.configure.post']);
+
+// 004 download transactions:
+Route::get('/import/download/index', ['uses' => 'Import\DownloadController@index', 'as' => 'import.download.index']);
+Route::get('/import/download/status', ['uses' => 'Import\DownloadController@status', 'as' => 'import.download.status']);
+Route::any('/import/download/start', ['uses' => 'Import\DownloadController@start', 'as' => 'import.download.start']);
+
+// 005 mapping
+Route::get('/import/mapping', ['uses' => 'Import\MappingController@index', 'as' => 'import.mapping.index']);
+
+
+
 // 999 list tokens (can be skipped)
 //Route::get('/import/spectre-connections', ['uses' => 'Import\ConnectionController@index', 'as' => 'import.connections.index']);
 //Route::post('/import/spectre-connections/submit', ['uses' => 'Import\ConnectionController@post', 'as' => 'import.connections.post']);
@@ -50,19 +64,17 @@ Route::get('/import/link-callback', ['uses' => 'Import\LinkController@callback',
 //Route::get('/import/callback', ['uses' => 'Import\CallbackController@index', 'as' => 'import.callback.index']);
 
 // go to job configuration
-//Route::get('/import/configuration', ['uses' => 'Import\ConfigurationController@index', 'as' => 'import.configure.index']);
-//Route::post('/import/configuration', ['uses' => 'Import\ConfigurationController@post', 'as' => 'import.configure.post']);
+//
 
 // download from Spectre
-//Route::get('/import/download/index', ['uses' => 'Import\DownloadController@index', 'as' => 'import.download.index']);
-//Route::any('/import/download/start', ['uses' => 'Import\DownloadController@start', 'as' => 'import.download.start']);
-//Route::get('/import/download/status', ['uses' => 'Import\DownloadController@status', 'as' => 'import.download.status']);
+//
+//
 
 // download config:
 //Route::get('/configuration/download', ['uses' => 'Import\ConfigurationController@download', 'as' => 'import.configuration.download']);
 
 // map data:
-//Route::get('/import/mapping', ['uses' => 'Import\MappingController@index', 'as' => 'import.mapping.index']);
+//
 //Route::post('/import/mapping', ['uses' => 'Import\MappingController@postIndex', 'as' => 'import.mapping.post']);
 
 // send to Firefly III

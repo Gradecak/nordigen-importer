@@ -57,7 +57,7 @@ class RoutineManager
      */
     public function __construct(?string $syncIdentifier = null)
     {
-        die('do not use');
+        die('do not use10');
         app('log')->debug('Constructed RoutineManager for sync');
 
         $this->spectreParser        = new ParseSpectreDownload;

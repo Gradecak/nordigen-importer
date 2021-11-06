@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace App\Http\Requests;
 
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
@@ -37,7 +38,7 @@ class Request extends FormRequest
      *
      * @return bool
      */
-    protected function convertBoolean($value): bool
+    protected function convertBoolean(mixed $value): bool
     {
         if (null === $value) {
             return false;

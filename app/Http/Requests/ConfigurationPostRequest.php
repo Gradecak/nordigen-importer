@@ -25,9 +25,10 @@ declare(strict_types=1);
 namespace App\Http\Requests;
 
 
+use Illuminate\Validation\Validator;
+
 /**
  * Class ConfigurationPostRequest
- * @deprecated
  */
 class ConfigurationPostRequest extends Request
 {
@@ -36,22 +37,22 @@ class ConfigurationPostRequest extends Request
      */
     public function getAll(): array
     {
-        die('do not use');
         // parse entire config file.
         $doImport = $this->get('do_import') ?? [];
 
         return [
-            'do_import'                 => $doImport,
-            'rules'                     => $this->convertBoolean($this->get('rules')),
-            'skip_form'                 => $this->convertBoolean($this->get('skip_form')),
-            'ignore_spectre_categories' => $this->convertBoolean($this->get('ignore_spectre_categories')),
-            'date_range'                => $this->string('date_range'),
-            'date_range_number'         => $this->integer('date_range_number'),
-            'date_range_unit'           => $this->string('date_range_unit'),
-            'date_not_before'           => $this->date('date_not_before'),
-            'date_not_after'            => $this->date('date_not_after'),
-            'do_mapping'                => $this->convertBoolean($this->get('do_mapping')),
-            'accounts'                  => $this->get('accounts'),
+            'do_import'                     => $doImport,
+            'accounts'                      => $this->get('accounts'),
+            'date_range'                    => $this->string('date_range'),
+            'date_range_number'             => $this->integer('date_range_number'),
+            'date_range_unit'               => $this->string('date_range_unit'),
+            'date_not_before'               => $this->date('date_not_before'),
+            'date_not_after'                => $this->date('date_not_after'),
+            'rules'                         => $this->convertBoolean($this->get('rules')),
+            'add_import_tag'                => $this->convertBoolean($this->get('add_import_tag')),
+            'ignore_duplicate_transactions' => $this->convertBoolean($this->get('ignore_duplicate_transactions')),
+            'do_mapping'                    => $this->convertBoolean($this->get('do_mapping')),
+            'skip_form'                     => $this->convertBoolean($this->get('skip_form')),
         ];
     }
 
@@ -60,19 +61,43 @@ class ConfigurationPostRequest extends Request
      */
     public function rules(): array
     {
-        die('do not use');
         return [
             //'some_weird_field' => 'required',
-            'rules'             => 'numeric|between:0,1',
-            'do_mapping'        => 'numeric|between:0,1',
-            'date_range'        => 'required|in:all,partial,range',
-            'date_range_number' => 'numeric|between:1,365',
-            'date_range_unit'   => 'required|in:d,w,m,y',
-            'date_not_before'   => 'date|nullable',
-            'date_not_after'    => 'date|nullable',
-            'accounts.*'        => 'numeric',
-            'do_import.*'       => 'numeric',
+            'do_import.*'                   => 'numeric',
+            'accounts.*'                    => 'numeric',
+            'date_range'                    => 'required|in:all,partial,range',
+            'date_range_number'             => 'numeric|between:1,365',
+            'date_range_unit'               => 'required|in:d,w,m,y',
+            'date_not_before'               => 'date|nullable',
+            'date_not_after'                => 'date|nullable',
+            'rules'                         => 'numeric|integer|between:0,1',
+            'add_import_tag'                => 'numeric|integer|between:0,1',
+            'ignore_duplicate_transactions' => 'numeric|integer|between:0,1',
+            'do_mapping'                    => 'numeric|integer|between:0,1',
+            'skip_form'                     => 'numeric|integer|between:0,1',
         ];
+    }
+
+
+    /**
+     * Configure the validator instance with special rules for after the basic validation rules.
+     *
+     * @param Validator $validator
+     *
+     * @return void
+     */
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(
+            function (Validator $validator) {
+                // validate all account info
+                $data = $validator->getData();
+                $doImport = $data['do_import'] ?? [];
+                if (0 === count($doImport)) {
+                    $validator->errors()->add('do_import', 'You must select at least one account to import from.');
+                }
+            }
+        );
     }
 
 }
