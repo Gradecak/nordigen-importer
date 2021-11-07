@@ -148,7 +148,6 @@ class Transaction
 
     /**
      * Return name of the destination account. Depends also on the amount
-     * TODO incorporate logic for amount.
      *
      * @return string|null
      */
@@ -175,17 +174,84 @@ class Transaction
     }
 
     /**
+     * Return IBAN of the destination account. Depends also on the amount
+     *
+     * @return string|null
+     */
+    public function getDestinationIban(): ?string
+    {
+        if (1 === bccomp($this->transactionAmount, '0')) {
+            Log::debug(sprintf('Destination IBAN is "debtor" because %s > 0.', $this->transactionAmount));
+            // amount is positive, its a deposit, return creditor
+            if ('' !== $this->debtorAccountIban) {
+                Log::debug(sprintf('Destination IBAN is "%s"', $this->debtorAccountIban));
+                return $this->debtorAccountIban;
+            }
+        }
+        if (1 !== bccomp($this->transactionAmount, '0')) {
+            Log::debug(sprintf('Destination IBAN is "creditor" because %s < 0.', $this->transactionAmount));
+            if ('' !== $this->creditorAccountIban) {
+                Log::debug(sprintf('Destination IBAN is "%s"', $this->creditorAccountIban));
+                return $this->creditorAccountIban;
+            }
+        }
+
+        Log::warning(sprintf('Transaction "%s" has no destination IBAN.', $this->transactionId));
+        return null;
+    }
+
+
+    /**
      * Return name of the source account. Depends also on the amount
-     * TODO incorporate logic for amount.
      *
      * @return string|null
      */
     public function getSourceName(): ?string
     {
-        if ('' !== $this->creditorName) {
-            return $this->creditorName;
+        if (-1 === bccomp($this->transactionAmount, '0')) {
+            Log::debug(sprintf('Source name is "debtor" because %s < 0.', $this->transactionAmount));
+            // amount is positive, its a deposit, return creditor
+            if ('' !== $this->debtorName) {
+                Log::debug(sprintf('Source name is "%s"', $this->debtorName));
+                return $this->debtorName;
+            }
         }
+        if (-1 !== bccomp($this->transactionAmount, '0')) {
+            Log::debug(sprintf('Source name is "creditor" because %s > 0.', $this->transactionAmount));
+            if ('' !== $this->creditorName) {
+                Log::debug(sprintf('Source name is "%s"', $this->creditorName));
+                return $this->creditorName;
+            }
+        }
+
         Log::warning(sprintf('Transaction "%s" has no source account information.', $this->transactionId));
+        return null;
+    }
+
+    /**
+     * Return name of the source account. Depends also on the amount
+     *
+     * @return string|null
+     */
+    public function getSourceIban(): ?string
+    {
+        if (-1 === bccomp($this->transactionAmount, '0')) {
+            Log::debug(sprintf('Source IBAN is from "debtor" because %s < 0.', $this->transactionAmount));
+            // amount is positive, its a deposit, return creditor
+            if ('' !== $this->debtorAccountIban) {
+                Log::debug(sprintf('Source IBAN is "%s"', $this->debtorAccountIban));
+                return $this->debtorAccountIban;
+            }
+        }
+        if (-1 !== bccomp($this->transactionAmount, '0')) {
+            Log::debug(sprintf('Source IBAN is "creditor" because %s > 0.', $this->transactionAmount));
+            if ('' !== $this->creditorAccountIban) {
+                Log::debug(sprintf('Source IBAN is "%s"', $this->creditorAccountIban));
+                return $this->creditorAccountIban;
+            }
+        }
+
+        Log::warning(sprintf('Transaction "%s" has no source IBAN information.', $this->transactionId));
         return null;
     }
 

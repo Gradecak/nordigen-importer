@@ -171,6 +171,7 @@ class GenerateTransactions
         $return['transactions'][0]['external_id']        = $entry->transactionId;
         $return['transactions'][0]['internal_reference'] = $entry->accountIdentifier;
 
+
         if (1 === bccomp($entry->transactionAmount, '0')) {
             Log::debug('Amount is positive: assume transfer or deposit.');
             // amount is positive: deposit or transfer. Spectre account is destination
@@ -180,8 +181,21 @@ class GenerateTransactions
             // destination is a Nordigen account
             $return['transactions'][0]['destination_id'] = (int) $this->accounts[$accountId];
 
-            // source is the other side:
-            $return['transactions'][0]['source_name'] = $entry->getSourceName() ?? '(unknown source account)';
+            // source iban valid?
+            $sourceIban = $entry->getSourceIban() ?? '';
+            if ('' !== $sourceIban && array_key_exists($sourceIban, $this->targetAccounts)) {
+                // source is also an ID:
+                Log::debug(sprintf('Recognized %s as a Firefly III asset account so this is a transfer.', $sourceIban));
+                $return['transactions'][0]['source_id'] = $this->targetAccounts[$sourceIban];
+                $return['transactions'][0]['type']      = 'transfer';
+            }
+
+            if ('' === $sourceIban || !array_key_exists($sourceIban, $this->targetAccounts)) {
+                Log::debug(sprintf('"%s" is not a valid IBAN OR not recognized as Firefly III asset account so submitted as-is.', $sourceIban));
+                // source is the other side:
+                $return['transactions'][0]['source_name'] = $entry->getSourceName() ?? '(unknown source account)';
+                $return['transactions'][0]['source_iban'] = $entry->getSourceIban() ?? null;
+            }
 
             // TODO mapping:
 //            $mappedId = $this->getMappedAccountId($return['transactions'][0]['source_name']);
@@ -209,8 +223,23 @@ class GenerateTransactions
 
             // source is a Nordigen account
             $return['transactions'][0]['source_id'] = (int) $this->accounts[$accountId];
-            // The destination is a shop or something:
-            $return['transactions'][0]['destination_name'] = $entry->getDestinationName() ?? '(unknown destination account)';
+
+
+            // destination iban valid?
+            $destinationIban = $entry->getDestinationIban() ?? '';
+            if ('' !== $destinationIban && array_key_exists($destinationIban, $this->targetAccounts)) {
+                // source is also an ID:
+                Log::debug(sprintf('Recognized %s as a Firefly III asset account so this is a transfer.', $destinationIban));
+                $return['transactions'][0]['destination_id'] = $this->targetAccounts[$destinationIban];
+                $return['transactions'][0]['type']           = 'transfer';
+            }
+
+            if ('' === $destinationIban || !array_key_exists($destinationIban, $this->targetAccounts)) {
+                Log::debug(sprintf('"%s" is not a valid IBAN OR not recognized as Firefly III asset account so submitted as-is.', $destinationIban));
+                // destination is the other side:
+                $return['transactions'][0]['destination_name'] = $entry->getDestinationName() ?? '(unknown destination account)';
+                $return['transactions'][0]['destination_iban'] = $entry->getDestinationIban() ?? null;
+            }
 
             // TODO mapping
 //            $mappedId = $this->getMappedAccountId($return['transactions'][0]['destination_name']);
@@ -232,7 +261,7 @@ class GenerateTransactions
 //            }
         }
 
-        app('log')->debug(sprintf('Parsed Nordigen transaction "%s".', $entry->transactionId));
+        app('log')->debug(sprintf('Parsed Nordigen transaction "%s".', $entry->transactionId), $return);
 
         return $return;
     }
