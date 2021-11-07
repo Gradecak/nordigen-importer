@@ -22,11 +22,13 @@
 
 declare(strict_types=1);
 
-namespace App\Services\Sync;
+namespace App\Services\Nordigen\Sync;
 
 use App\Exceptions\ImportException;
 use App\Services\Configuration\Configuration;
-use App\Services\Sync\JobStatus\ProgressInformation;
+use App\Services\Nordigen\Model\Transaction;
+use App\Services\Nordigen\Sync\JobStatus\ProgressInformation;
+use Cache;
 use GrumpyDictator\FFIIIApiSupport\Exceptions\ApiHttpException;
 use GrumpyDictator\FFIIIApiSupport\Model\Account;
 use GrumpyDictator\FFIIIApiSupport\Request\GetAccountRequest;
@@ -37,22 +39,15 @@ use Log;
 
 /**
  * Class GenerateTransactions.
- * @deprecated
  */
 class GenerateTransactions
 {
     use ProgressInformation;
 
-    /** @var array */
-    private $accounts;
-    /** @var Configuration */
-    private $configuration;
-    /** @var string[] */
-    private $specialSubTypes = ['REVERSAL', 'REQUEST', 'BILLING', 'SCT', 'SDD', 'NLO'];
-    /** @var array */
-    private $targetAccounts;
-    /** @var array */
-    private $targetTypes;
+    private array         $accounts;
+    private Configuration $configuration;
+    private array         $targetAccounts;
+    private array         $targetTypes;
 
     /**
      * GenerateTransactions constructor.
@@ -62,7 +57,6 @@ class GenerateTransactions
         $this->targetAccounts = [];
         $this->targetTypes    = [];
         bcscale(12);
-        die('do not use 8');
     }
 
     /**
@@ -70,10 +64,17 @@ class GenerateTransactions
      */
     public function collectTargetAccounts(): void
     {
+        if (config('importer.use_ff3_cache') && Cache::has('collect_target_accounts')) {
+            Log::debug('Grab target accounts from cache.');
+            $info                 = Cache::get('collect_target_accounts');
+            $this->targetAccounts = $info['accounts'];
+            $this->targetTypes    = $info['types'];
+            return;
+        }
         Log::debug('Going to collect all target accounts from Firefly III.');
         // send account list request to Firefly III.
-        $token   = (string)config('importer.access_token');
-        $url     = (string)config('importer.url');
+        $token   = (string) config('importer.access_token');
+        $url     = (string) config('importer.url');
         $request = new GetAccountsRequest($url, $token);
         /** @var GetAccountsResponse $result */
         $result = $request->get();
@@ -86,7 +87,7 @@ class GenerateTransactions
                 continue;
             }
             $iban = $entry->iban;
-            if ('' === (string)$iban) {
+            if ('' === (string) $iban) {
                 continue;
             }
             Log::debug(sprintf('Collected %s (%s) under ID #%d', $iban, $entry->type, $entry->id));
@@ -96,49 +97,55 @@ class GenerateTransactions
         $this->targetAccounts = $return;
         $this->targetTypes    = $types;
         Log::debug(sprintf('Collected %d accounts.', count($this->targetAccounts)));
+        if (config('importer.use_ff3_cache')) {
+            $array = [
+                'accounts' => $return,
+                'types'    => $types,
+            ];
+            Cache::put('collect_target_accounts', $array, 86400); // 24h
+            Log::info('Stored collected accounts in cache.');
+        }
     }
 
     /**
-     * @param array $spectre
+     * @param array $transactions
      *
      * @return array
-     * @throws ImportException
      */
-    public function getTransactions(array $spectre): array
+    public function getTransactions(array $transactions): array
     {
+        Log::debug('Now generate transactions.');
         $return = [];
         /**
-         * @var string $spectreAccountId
+         * @var string $accountId
          * @var array  $entries
          */
-        foreach ($spectre as $spectreAccountId => $entries) {
-            $spectreAccountId = (string)$spectreAccountId;
-            app('log')->debug(sprintf('Going to parse account #%s', $spectreAccountId));
-            foreach ($entries as $entry) {
-                $return[] = $this->generateTransaction($spectreAccountId, $entry);
-                // TODO error handling at this point.
+        foreach ($transactions as $accountId => $entries) {
+            $total = count($entries);
+            app('log')->debug(sprintf('Going to parse account %s with %d transaction(s).', $accountId, $total));
+            /**
+             * @var int         $index
+             * @var Transaction $entry
+             */
+            foreach ($entries as $index => $entry) {
+                Log::debug(sprintf('[%d/%d] Parsing transaction.', ($index + 1), $total));
+                $return[] = $this->generateTransaction($accountId, $entry);
+                Log::debug(sprintf('[%d/%d] Done parsing transaction.', ($index + 1), $total));
             }
         }
         $this->addMessage(0, sprintf('Parsed %d Spectre transactions for further processing.', count($return)));
-
+        Log::debug('Done parsing transactions.');
         return $return;
     }
 
     /**
-     * @param string $spectreAccountId
-     * @param array  $entry
-     *
+     * @param string      $accountId
+     * @param Transaction $entry
      * @return array
-     * @throws ImportException
      */
-    private function generateTransaction(string $spectreAccountId, array $entry): array
+    private function generateTransaction(string $accountId, Transaction $entry): array
     {
-
-        //Log::debug('Original Spectre transaction', $entry);
-        $description = $entry['description'];
-        if (array_key_exists('extra', $entry) && array_key_exists('additional', $entry['extra'])) {
-            $description = trim(sprintf('%s %s', $description, (string)$entry['extra']['additional']));
-        }
+        Log::debug('Original Nordigen transaction', $entry->toLocalArray());
 
         $return = [
             'apply_rules'             => $this->configuration->isRules(),
@@ -146,85 +153,86 @@ class GenerateTransactions
             'transactions'            => [
                 [
                     'type'          => 'withdrawal', // reverse
-                    'date'          => str_replace('T', ' ', substr($entry['made_on'], 0, 19)),
-                    'datetime'      => $entry['made_on'], // not used in API, only for transaction filtering.
-                    'amount'        => 0,
-                    'description'   => $description,
+                    'date'          => $entry->valueDate->format('Y-m-d'),
+                    'datetime'      => $entry->valueDate->toW3cString(),
+                    'amount'        => $entry->transactionAmount,
+                    'description'   => $entry->getDescription(),
                     'order'         => 0,
-                    'currency_code' => $entry['currency_code'],
-                    'tags'          => [$entry['mode'], $entry['status'], $entry['category']],
-                    'category_name' => $entry['category'],
-                    'category_id'   => $this->configuration->getMapping()['categories'][$entry['category']] ?? null,
+                    'currency_code' => $entry->currencyCode,
+                    'tags'          => [],
+                    'category_name' => null,
+                    'category_id'   => null,
                 ],
             ],
         ];
-        if ($this->configuration->isIgnoreSpectreCategories()) {
-            Log::debug('Remove Spectre categories + tags.');
-            unset($return['transactions'][0]['tags'], $return['transactions'][0]['category_name'], $return['transactions'][0]['category_id']);
-        }
-        // save meta:
-        $return['transactions'][0]['external_id']        = $entry['id'];
-        $return['transactions'][0]['internal_reference'] = $spectreAccountId;
 
-        if (1 === bccomp($entry['amount'], '0')) {
+
+        // save meta:
+        $return['transactions'][0]['external_id']        = $entry->transactionId;
+        $return['transactions'][0]['internal_reference'] = $entry->accountIdentifier;
+
+        if (1 === bccomp($entry->transactionAmount, '0')) {
             Log::debug('Amount is positive: assume transfer or deposit.');
             // amount is positive: deposit or transfer. Spectre account is destination
             $return['transactions'][0]['type']   = 'deposit';
-            $return['transactions'][0]['amount'] = $entry['amount'];
+            $return['transactions'][0]['amount'] = $entry->transactionAmount;
 
-            // destination is Spectre
-            $return['transactions'][0]['destination_id'] = (int)$this->accounts[$spectreAccountId];
+            // destination is a Nordigen account
+            $return['transactions'][0]['destination_id'] = (int) $this->accounts[$accountId];
 
             // source is the other side:
-            $return['transactions'][0]['source_name'] = $entry['extra']['payee'] ?? '(unknown source account)';
+            $return['transactions'][0]['source_name'] = $entry->getSourceName() ?? '(unknown source account)';
 
-            $mappedId = $this->getMappedAccountId($return['transactions'][0]['source_name']);
-            if (null !== $mappedId && 0 !== $mappedId) {
-                Log::debug(sprintf('Account name "%s" is mapped to Firefly III account ID "%d"', $return['transactions'][0]['source_name'], $mappedId));
-                $mappedType                             = $this->getMappedAccountType($mappedId);
-                $originalSourceName                     = $return['transactions'][0]['source_name'];
-                $return['transactions'][0]['source_id'] = $mappedId;
-                // catch error here:
-                try {
-                    $return['transactions'][0]['type'] = $this->getTransactionType($mappedType, 'asset');
-                } catch (ImportException $e) {
-                    Log::error($e->getMessage());
-                    Log::info('Will not use mapped ID, Firefly III account is of the wrong type.');
-                    unset($return['transactions'][0]['source_id']);
-                    $return['transactions'][0]['source_name'] = $originalSourceName;
-                }
-            }
+            // TODO mapping:
+//            $mappedId = $this->getMappedAccountId($return['transactions'][0]['source_name']);
+//            if (null !== $mappedId && 0 !== $mappedId) {
+//                Log::debug(sprintf('Account name "%s" is mapped to Firefly III account ID "%d"', $return['transactions'][0]['source_name'], $mappedId));
+//                $mappedType                             = $this->getMappedAccountType($mappedId);
+//                $originalSourceName                     = $return['transactions'][0]['source_name'];
+//                $return['transactions'][0]['source_id'] = $mappedId;
+//                // catch error here:
+//                try {
+//                    $return['transactions'][0]['type'] = $this->getTransactionType($mappedType, 'asset');
+//                } catch (ImportException $e) {
+//                    Log::error($e->getMessage());
+//                    Log::info('Will not use mapped ID, Firefly III account is of the wrong type.');
+//                    unset($return['transactions'][0]['source_id']);
+//                    $return['transactions'][0]['source_name'] = $originalSourceName;
+//                }
+//            }
         }
 
-        if (-1 === bccomp($entry['amount'], '0')) {
+        if (-1 === bccomp($entry->transactionAmount, '0')) {
             // amount is negative: withdrawal or transfer.
             Log::debug('Amount is negative: assume transfer or withdrawal.');
-            $return['transactions'][0]['amount'] = bcmul($entry['amount'], '-1');
+            $return['transactions'][0]['amount'] = bcmul($entry->transactionAmount, '-1');
 
-            // source is Spectre:
-            $return['transactions'][0]['source_id'] = (int)$this->accounts[$spectreAccountId];
-            // dest is shop
-            $return['transactions'][0]['destination_name'] = $entry['extra']['payee'] ?? '(unknown destination account)';
+            // source is a Nordigen account
+            $return['transactions'][0]['source_id'] = (int) $this->accounts[$accountId];
+            // The destination is a shop or something:
+            $return['transactions'][0]['destination_name'] = $entry->getDestinationName() ?? '(unknown destination account)';
 
-            $mappedId = $this->getMappedAccountId($return['transactions'][0]['destination_name']);
-
-            if (null !== $mappedId && 0 !== $mappedId) {
-                Log::debug(sprintf('Account name "%s" is mapped to Firefly III account ID "%d"', $return['transactions'][0]['destination_name'], $mappedId));
-                $mappedType                                  = $this->getMappedAccountType($mappedId);
-                $originalDestName                            = $return['transactions'][0]['destination_name'];
-                $return['transactions'][0]['destination_id'] = $mappedId;
-                // catch error here:
-                try {
-                    $return['transactions'][0]['type'] = $this->getTransactionType('asset', $mappedType);
-                } catch (ImportException $e) {
-                    Log::error($e->getMessage());
-                    Log::info('Will not use mapped ID, Firefly III account is of the wrong type.');
-                    unset($return['transactions'][0]['destination_id']);
-                    $return['transactions'][0]['destination_name'] = $originalDestName;
-                }
-            }
+            // TODO mapping
+//            $mappedId = $this->getMappedAccountId($return['transactions'][0]['destination_name']);
+//
+//            if (null !== $mappedId && 0 !== $mappedId) {
+//                Log::debug(sprintf('Account name "%s" is mapped to Firefly III account ID "%d"', $return['transactions'][0]['destination_name'], $mappedId));
+//                $mappedType                                  = $this->getMappedAccountType($mappedId);
+//                $originalDestName                            = $return['transactions'][0]['destination_name'];
+//                $return['transactions'][0]['destination_id'] = $mappedId;
+//                // catch error here:
+//                try {
+//                    $return['transactions'][0]['type'] = $this->getTransactionType('asset', $mappedType);
+//                } catch (ImportException $e) {
+//                    Log::error($e->getMessage());
+//                    Log::info('Will not use mapped ID, Firefly III account is of the wrong type.');
+//                    unset($return['transactions'][0]['destination_id']);
+//                    $return['transactions'][0]['destination_name'] = $originalDestName;
+//                }
+//            }
         }
-        app('log')->debug(sprintf('Parsed Spectre transaction #%d', $entry['id']));
+
+        app('log')->debug(sprintf('Parsed Nordigen transaction "%s".', $entry->transactionId));
 
         return $return;
     }
@@ -237,8 +245,9 @@ class GenerateTransactions
      */
     private function getMappedAccountId(string $name): ?int
     {
+        die('gen 4');
         if (isset($this->configuration->getMapping()['accounts'][$name])) {
-            return (int)$this->configuration->getMapping()['accounts'][$name];
+            return (int) $this->configuration->getMapping()['accounts'][$name];
         }
 
         return null;
@@ -251,6 +260,7 @@ class GenerateTransactions
      */
     private function getMappedAccountType(int $mappedId): string
     {
+        die('gen 5');
         if (!isset($this->configuration->getAccountTypes()[$mappedId])) {
             app('log')->warning(sprintf('Cannot find account type for Firefly III account #%d.', $mappedId));
             $accountType             = $this->getAccountType($mappedId);
@@ -276,8 +286,9 @@ class GenerateTransactions
      */
     private function getAccountType(int $accountId): string
     {
-        $url   = (string)config('importer.url');
-        $token = (string)config('importer.access_token');
+        die('gen 6');
+        $url   = (string) config('importer.url');
+        $token = (string) config('importer.access_token');
         app('log')->debug(sprintf('Going to download account #%d', $accountId));
         $request = new GetAccountRequest($url, $token);
         $request->setId($accountId);
@@ -299,6 +310,7 @@ class GenerateTransactions
      */
     private function getTransactionType(string $source, string $destination): string
     {
+        die('gen 7');
         $combination = sprintf('%s-%s', $source, $destination);
         switch ($combination) {
             default:

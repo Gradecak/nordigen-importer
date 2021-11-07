@@ -23,7 +23,8 @@
 namespace App\Services\Nordigen\Model;
 
 use Carbon\Carbon;
-use JetBrains\PhpStorm\Pure;
+use DateTimeInterface;
+use Log;
 
 class Transaction
 {
@@ -63,12 +64,14 @@ class Transaction
     public string $transactionAmount;
     public string $currencyCode;
 
+    // other custom fields
+    public string $accountIdentifier;
+
 
     /**
      * @param $array
      * @return self
      */
-    #[Pure]
     public static function fromArray($array): self
     {
         $object = new self;
@@ -77,7 +80,7 @@ class Transaction
         $object->additionalInformationStructured        = $array['additionalInformationStructured'] ?? '';
         $object->balanceAfterTransaction                = $array['balanceAfterTransaction'] ?? '';
         $object->bankTransactionCode                    = $array['bankTransactionCode'] ?? '';
-        $object->bookingDate                            = array_key_exists('bookingDate', $array) ? Carbon::createFromFormat('!Y-m-d', $array['bookingDate']) : new Carbon;
+        $object->bookingDate                            = array_key_exists('bookingDate', $array) ? Carbon::createFromFormat('!Y-m-d', $array['bookingDate'], config('app.timezone')) : new Carbon(config('app.timezone'));
         $object->key                                    = $array['key'] ?? '';
         $object->checkId                                = $array['checkId'] ?? '';
         $object->creditorAccount                        = $array['creditorAccount'] ?? '';
@@ -98,13 +101,147 @@ class Transaction
         $object->transactionId                          = $array['transactionId'] ?? '';
         $object->ultimateCreditor                       = $array['ultimateCreditor'] ?? '';
         $object->ultimateDebtor                         = $array['ultimateDebtor'] ?? '';
-        $object->valueDate                              = array_key_exists('valueDate', $array) ? Carbon::createFromFormat('!Y-m-d', $array['valueDate']) : new Carbon;
+        $object->valueDate                              = array_key_exists('valueDate', $array) ? Carbon::createFromFormat('!Y-m-d', $array['valueDate'], config('app.timezone')) : new Carbon(config('app.timezone'));
 
         // array values:
         $object->debtorAccountIban = $array['debtorAccount']['iban'] ?? '';
-
         $object->transactionAmount = $array['transactionAmount']['amount'] ?? '';
         $object->currencyCode      = $array['transactionAmount']['currency'] ?? '';
+
+        // other fields:
+        $object->accountIdentifier = '';
+
+        return $object;
+    }
+
+    /**
+     * Return transaction description, which depends on the values in the object:
+     * @return string
+     */
+    public function getDescription(): string
+    {
+        $description = '';
+        if ('' !== $this->remittanceInformationUnstructured) {
+            $description = $this->remittanceInformationUnstructured;
+        }
+
+        return $description;
+    }
+
+    /**
+     * Return name of the destination account. Depends also on the amount
+     * TODO incorporate logic for amount.
+     *
+     * @return string|null
+     */
+    public function getDestinationName(): ?string {
+        if('' !== $this->debtorName) {
+            return $this->debtorName;
+        }
+        Log::warning(sprintf('Transaction "%s" has no destination account information.', $this->transactionId));
+        return null;
+    }
+
+    /**
+     * Return name of the source account. Depends also on the amount
+     * TODO incorporate logic for amount.
+     *
+     * @return string|null
+     */
+    public function getSourceName(): ?string {
+        if('' !== $this->creditorName) {
+            return $this->creditorName;
+        }
+        Log::warning(sprintf('Transaction "%s" has no source account information.', $this->transactionId));
+        return null;
+    }
+
+    /**
+     * Call this "toLocalArray" because we want to confusion with "fromArray", which is really based
+     * on Nordigen information. Likewise there is also "fromLocalArray".
+     * @return array
+     */
+    public function toLocalArray(): array
+    {
+        $return = [
+            'additional_information'                    => $this->additionalInformation,
+            'additional_information_structured'         => $this->additionalInformationStructured,
+            'balance_after_transaction'                 => $this->balanceAfterTransaction,
+            'bank_transaction_code'                     => $this->bankTransactionCode,
+            'booking_date'                              => $this->bookingDate->toW3cString(),
+            'check_id'                                  => $this->checkId,
+            'creditor_account'                          => $this->creditorAccount,
+            'creditor_agent'                            => $this->creditorAgent,
+            'creditor_id'                               => $this->creditorId,
+            'creditor_name'                             => $this->creditorName,
+            'currency_exchange'                         => $this->currencyExchange,
+            'debtor_agent'                              => $this->debtorAgent,
+            'debtor_name'                               => $this->debtorName,
+            'entry_reference'                           => $this->entryReference,
+            'key'                                       => $this->key,
+            'mandate_id'                                => $this->mandateId,
+            'proprietary_bank'                          => $this->proprietaryBank,
+            'purpose_code'                              => $this->purposeCode,
+            'remittance_information_structured'         => $this->remittanceInformationStructured,
+            'remittance_information_structured_array'   => $this->remittanceInformationStructuredArray,
+            'remittance_information_unstructured'       => $this->remittanceInformationUnstructured,
+            'remittance_information_unstructured_array' => $this->remittanceInformationUnstructuredArray,
+            'transaction_id'                            => $this->transactionId,
+            'ultimate_creditor'                         => $this->ultimateCreditor,
+            'ultimate_debtor'                           => $this->ultimateDebtor,
+            'value_date'                                => $this->valueDate->toW3cString(),
+            'account_identifier'                        => $this->accountIdentifier,
+            'debtor_account'                            => [],
+            'transaction_amount'                        => [
+                'amount'   => $this->transactionAmount,
+                'currency' => $this->currencyCode,
+            ],
+        ];
+        if ('' !== $this->debtorAccountIban) {
+            // debtor is an array
+            $return['debtor_account'] = ['iban' => $this->debtorAccountIban];
+        }
+
+        return $return;
+    }
+
+    public static function fromLocalArray(array $array): self
+    {
+        $object = new self;
+
+        $object->additionalInformation                  = $array['additional_information'];
+        $object->additionalInformationStructured        = $array['additional_information_structured'];
+        $object->balanceAfterTransaction                = $array['balance_after_transaction'];
+        $object->bankTransactionCode                    = $array['bank_transaction_code'];
+        $object->bookingDate                            = Carbon::createFromFormat(DateTimeInterface::W3C, $array['booking_date']);
+        $object->checkId                                = $array['check_id'];
+        $object->creditorAccount                        = $array['creditor_account'];
+        $object->creditorAgent                          = $array['creditor_agent'];
+        $object->creditorId                             = $array['creditor_id'];
+        $object->creditorName                           = $array['creditor_name'];
+        $object->currencyExchange                       = $array['currency_exchange'];
+        $object->debtorAgent                            = $array['debtor_agent'];
+        $object->debtorName                             = $array['debtor_name'];
+        $object->entryReference                         = $array['entry_reference'];
+        $object->key                                    = $array['key'];
+        $object->mandateId                              = $array['mandate_id'];
+        $object->proprietaryBank                        = $array['proprietary_bank'];
+        $object->purposeCode                            = $array['purpose_code'];
+        $object->remittanceInformationStructured        = $array['remittance_information_structured'];
+        $object->remittanceInformationStructuredArray   = $array['remittance_information_structured_array'];
+        $object->remittanceInformationUnstructured      = $array['remittance_information_unstructured'];
+        $object->remittanceInformationUnstructuredArray = $array['remittance_information_unstructured_array'];
+        $object->transactionId                          = $array['transaction_id'];
+        $object->ultimateCreditor                       = $array['ultimate_creditor'];
+        $object->ultimateDebtor                         = $array['ultimate_debtor'];
+        $object->valueDate                              = Carbon::createFromFormat(DateTimeInterface::W3C, $array['value_date']);
+        $object->debtorAccountIban                      = array_key_exists('iban', $array['debtor_account']) ? $array['debtor_account']['iban'] : '';
+        $object->transactionAmount                      = $array['transaction_amount']['amount'];
+        $object->currencyCode                           = $array['transaction_amount']['currency'];
+        $object->accountIdentifier                      = $array['account_identifier'];
+
+        //$object-> = $array[''];
+
 
         return $object;
     }

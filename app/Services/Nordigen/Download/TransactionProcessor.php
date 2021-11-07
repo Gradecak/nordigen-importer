@@ -94,7 +94,6 @@ class TransactionProcessor
             Log::debug(sprintf('Will not grab transactions after "%s"', $this->notAfter->format('Y-m-d H:i:s')));
         }
         $return = [];
-        /** @var Transaction $transaction */
         foreach ($transactions as $transaction) {
             $madeOn = $transaction->valueDate;
 
@@ -120,7 +119,7 @@ class TransactionProcessor
                 continue;
             }
             app('log')->info(sprintf('Include transaction because date is "%s".', $madeOn->format(self::DATE_TIME_FORMAT),));
-            $return[] = $transaction;
+            $return[] = $transaction->toLocalArray();
         }
         Log::debug(sprintf('After filtering, set is %d transaction(s)', count($return)));
 

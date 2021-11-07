@@ -22,7 +22,7 @@
 
 declare(strict_types=1);
 
-namespace App\Services\Sync\JobStatus;
+namespace App\Services\Nordigen\Sync\JobStatus;
 
 use App\Services\Session\Constants;
 use Illuminate\Contracts\Filesystem\FileNotFoundException;
@@ -30,7 +30,6 @@ use Illuminate\Support\Facades\Storage;
 
 /**
  * Class JobStatusManager.
- * @deprecated
  */
 class JobStatusManager
 {
@@ -41,7 +40,6 @@ class JobStatusManager
      */
     public static function addError(string $identifier, int $index, string $error): void
     {
-        die('job status manager err');
         $disk = Storage::disk('jobs');
         try {
             if ($disk->exists($identifier)) {
@@ -61,7 +59,6 @@ class JobStatusManager
      */
     private static function storeJobStatus(string $syncIdentifier, JobStatus $status): void
     {
-        die('job status manager err');
         app('log')->debug(sprintf('Now in Sync storeJobStatus(%s): %s', $syncIdentifier, $status->status));
         $array = $status->toArray();
         $disk  = Storage::disk('jobs');
@@ -76,7 +73,6 @@ class JobStatusManager
      */
     public static function addMessage(string $identifier, int $index, string $message): void
     {
-        die('job status manager err');
         $disk = Storage::disk('jobs');
         try {
             if ($disk->exists($identifier)) {
@@ -97,7 +93,6 @@ class JobStatusManager
      */
     public static function addWarning(string $identifier, int $index, string $warning): void
     {
-        die('job status manager err');
         $disk = Storage::disk('jobs');
         try {
             if ($disk->exists($identifier)) {
@@ -118,7 +113,6 @@ class JobStatusManager
      */
     public static function setJobStatus(string $status): JobStatus
     {
-        die('job status manager err');
         $syncIdentifier = session()->get(Constants::SYNC_JOB_IDENTIFIER);
         app('log')->debug(sprintf('Now in Sync setJobStatus(%s)', $status));
         app('log')->debug(sprintf('Found "%s" in the session', $syncIdentifier));
@@ -138,7 +132,6 @@ class JobStatusManager
      */
     public static function startOrFindJob(string $identifier): JobStatus
     {
-        die('job status manager err');
         $disk = Storage::disk('jobs');
         try {
             if ($disk->exists($identifier)) {

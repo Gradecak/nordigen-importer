@@ -26,7 +26,7 @@ namespace App\Console;
 
 use App\Exceptions\ImportException;
 use App\Services\Configuration\Configuration;
-use App\Services\Sync\JobStatus\JobStatusManager;
+use App\Services\Nordigen\Sync\JobStatus\JobStatusManager;
 use App\Services\Nordigen\Sync\RoutineManager as SyncRoutineManager;
 
 /**

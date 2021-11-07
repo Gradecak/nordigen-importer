@@ -30,6 +30,7 @@ use App\Console\StartDownload;
 use App\Console\StartSync;
 use App\Console\VerifyJSON;
 use Illuminate\Console\Command;
+use JsonException;
 
 /**
  * Class NordigenImport
@@ -50,7 +51,9 @@ class NordigenImport extends Command
      *
      * @var string
      */
-    protected $signature = 'importer:import {config : The JSON configuration file}';
+    protected $signature = 'importer:import
+            {config : The JSON configuration file}
+            {downloadIdentifier? : Recycle existing download instead of downloading again.}';
 
     /**
      * Create a new command instance.
@@ -94,24 +97,36 @@ class NordigenImport extends Command
 
             return 1;
         }
-        $configuration = json_decode(file_get_contents($config), true, 512, JSON_THROW_ON_ERROR);
+        try {
+            $configuration = json_decode(file_get_contents($config), true, 512, JSON_THROW_ON_ERROR);
+        } catch (JsonException $e) {
+            // TODO error handling here.
+            $this->error('Some error');
+            return 1;
+        }
 
         $this->line('The import routine is about to start.');
         $this->line('This is invisible and may take quite some time.');
         $this->line('Once finished, you will see a list of errors, warnings and messages (if applicable).');
         $this->line('--------');
         $this->line('Running...');
-        $result = $this->startDownload($configuration);
-        if (0 === $result) {
-            $this->line('Download from Nordigen complete.');
-        }
-        if (0 !== $result) {
-            $this->warn('Download from Nordigen resulted in errors.');
 
-            return $result;
+        if (null !== $this->argument('downloadIdentifier')) {
+            $downloadIdentifier = $this->argument('downloadIdentifier');
+            $this->line(sprintf('You have submitted an existing download: "%s"', $downloadIdentifier));
+            $this->downloadIdentifier = $downloadIdentifier;
         }
+        if (null === $this->argument('downloadIdentifier')) {
+            $result = $this->startDownload($configuration);
+            if (0 === $result) {
+                $this->line('Download from Nordigen complete.');
+            }
+            if (0 !== $result) {
+                $this->warn('Download from Nordigen resulted in errors.');
 
-        
+                return $result;
+            }
+        }
 
         $secondResult = $this->startSync($configuration);
         if (0 === $secondResult) {

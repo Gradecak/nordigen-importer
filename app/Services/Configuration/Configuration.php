@@ -49,6 +49,7 @@ class Configuration
     private bool    $ignoreDuplicateTransactions;
     private bool    $doMapping;
     private array   $accounts;
+    private array   $mapping;
 
     /**
      * Configuration constructor.
@@ -69,6 +70,7 @@ class Configuration
         $this->ignoreDuplicateTransactions = true;
         $this->doMapping                   = false;
         $this->accounts                    = [];
+        $this->mapping                     = [];
 
         $this->version = self::VERSION;
     }
@@ -175,6 +177,7 @@ class Configuration
         $object->ignoreDuplicateTransactions = $array['ignore_duplicate_transactions'] ?? true;
         $object->doMapping                   = $array['do_mapping'] ?? false;
         $object->accounts                    = $array['accounts'] ?? [];
+        $object->mapping                     = $array['mapping'] ?? [];
 
 
         return $object;
@@ -290,6 +293,7 @@ class Configuration
             'ignore_duplicate_transactions' => $this->ignoreDuplicateTransactions,
             'do_mapping'                    => $this->doMapping,
             'accounts'                      => $this->accounts,
+            'mapping'                       => $this->mapping,
         ];
     }
 
@@ -367,7 +371,7 @@ class Configuration
             case 'range':
                 Log::debug('Range is "range", both will be created from a string.');
                 $before = $this->dateNotBefore; // string
-                $after  = $this->dateNotAfter; // string
+                $after  = $this->dateNotAfter;  // string
                 if (null !== $before) {
                     $before = Carbon::createFromFormat('Y-m-d', $before);
                 }
@@ -426,4 +430,14 @@ class Configuration
 
         return null;
     }
+
+    /**
+     * @return array
+     */
+    public function getMapping(): array
+    {
+        return $this->mapping;
+    }
+
+
 }

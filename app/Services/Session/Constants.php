@@ -76,6 +76,10 @@ class Constants
     // key under which download identifier (cache thing) is stored
     public const DOWNLOAD_JOB_IDENTIFIER = 'download_job_id';
 
+    // key under which sync identifier is stored.
+    public const SYNC_JOB_IDENTIFIER = 'sync_job_id';
+
+
 //    /** @var string */
 //    /** @var string */
 //    public const UPLOAD_CSV_FILE = 'csv_file_path';
@@ -96,7 +100,6 @@ class Constants
 //
 //
 //    /** @var string */
-//    public const SYNC_JOB_IDENTIFIER = 'sync_job_id';
 //
 //    /** @var string */
 //    public const MAPPING_COMPLETE_INDICATOR = 'mapping_config_complete';

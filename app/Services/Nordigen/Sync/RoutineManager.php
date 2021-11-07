@@ -24,7 +24,6 @@ declare(strict_types=1);
 
 namespace App\Services\Nordigen\Sync;
 
-use App\Exceptions\ImporterErrorException;
 use App\Services\Configuration\Configuration;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -35,16 +34,15 @@ use Log;
  */
 class RoutineManager
 {
-    private array                $allErrors;
-    private array                $allMessages;
-    private array                $allWarnings;
-    private Configuration        $configuration;
-    private string               $downloadIdentifier;
-    //private ParseSpexctreDownload $spxectreParser;
-    private string               $syncIdentifier;
-    //private FilterTransactions   $transactionFilter;
-    //private GenerateTransactions $transactionGenerator;
-    //private SendTransactions     $transactionSender;
+    private array               $allErrors;
+    private array               $allMessages;
+    private array               $allWarnings;
+    private string              $downloadIdentifier;
+    private GetNordigenDownload $grabber;
+    private string              $syncIdentifier;
+    private FilterTransactions   $transactionFilter;
+    private GenerateTransactions $transactionGenerator;
+    private SendTransactions     $transactionSender;
 
     /**
      * Collect info on the current job, hold it in memory.
@@ -59,10 +57,10 @@ class RoutineManager
     {
         app('log')->debug('Constructed RoutineManager for sync');
 
-        //$this->spectxreParser        = new ParseSpectrxeDownload;
-        //$this->transactionGenerator = new GenerateTransactions;
-        //$this->transactionFilter    = new FilterTransactions;
-        //$this->transactionSender    = new SendTransactions;
+        $this->grabber              = new GetNordigenDownload;
+        $this->transactionGenerator = new GenerateTransactions;
+        $this->transactionFilter    = new FilterTransactions;
+        $this->transactionSender    = new SendTransactions;
 
         // get line converter
         $this->allMessages = [];
@@ -74,10 +72,10 @@ class RoutineManager
         if (null !== $syncIdentifier) {
             $this->syncIdentifier = $syncIdentifier;
         }
-        //$this->specxtreParser->setIdentifier($this->syncIdentifier);
-        //$this->transactionGenerator->setIdentifier($this->syncIdentifier);
-        //$this->transactionFilter->setIdentifier($this->syncIdentifier);
-        //$this->transactionSender->setIdentifier($this->syncIdentifier);
+        $this->grabber->setIdentifier($this->syncIdentifier);
+        $this->transactionGenerator->setIdentifier($this->syncIdentifier);
+        $this->transactionFilter->setIdentifier($this->syncIdentifier);
+        $this->transactionSender->setIdentifier($this->syncIdentifier);
     }
 
     private function generateSyncIdentifier(): void
@@ -155,38 +153,38 @@ class RoutineManager
      */
     public function setConfiguration(Configuration $configuration): void
     {
-        $this->configuration = $configuration;
         Log::error('Here set configuration for other classes');
-        //$this->transactionGenerator->setConfiguration($configuration);
-        //$this->transactionSender->setConfiguration($configuration);
+        $this->transactionGenerator->setConfiguration($configuration);
+        $this->transactionSender->setConfiguration($configuration);
     }
 
     /**
      * Start the import.
-     *
-     * @throws ImportException
      */
     public function start(): void
     {
         Log::debug(sprintf('Now in %s', __METHOD__));
+
+        // get JSON file from Nordigen download
+        Log::debug('Going to get Nordigen download.');
+        $array = $this->grabber->getDownload($this->downloadIdentifier);
+        Log::debug('Done getting Nordigen download.');
+
         Log::error('This is where the magic happens.');
-        // get JSON file from Spexctre download
-        //Log::debug('Going to parse Nordigen download.');
-        //$array = $this->specxtreParser->getDownload($this->downloadIdentifier);
-        //Log::debug('Done parsing Nordigen download.');
+
 
         // generate Firefly III ready transactions:
-        //app('log')->debug('Generating Firefly III transactions.');
-        //$this->transactionGenerator->collectTargetAccounts();
+        app('log')->debug('Generating Firefly III transactions.');
+        $this->transactionGenerator->collectTargetAccounts();
 
-        //$transactions = $this->transactionGenerator->getTransactions($array);
-        //app('log')->debug(sprintf('Generated %d Firefly III transactions.', count($transactions)));
+        $transactions = $this->transactionGenerator->getTransactions($array);
+        app('log')->debug(sprintf('Generated %d Firefly III transactions.', count($transactions)));
 
-        //$filtered = $this->transactionFilter->filter($transactions);
-        //app('log')->debug(sprintf('Filtered down to %d Firefly III transactions.', count($filtered)));
+        $filtered = $this->transactionFilter->filter($transactions);
+        app('log')->debug(sprintf('Filtered down to %d Firefly III transactions.', count($filtered)));
 
         // send to Firefly III.
-        //app('log')->debug('Going to send them to Firefly III.');
-        //$sent = $this->transactionSender->send($filtered);
+        app('log')->debug('Going to send them to Firefly III.');
+        $sent = $this->transactionSender->send($filtered);
     }
 }

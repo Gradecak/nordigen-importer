@@ -22,37 +22,27 @@
 
 declare(strict_types=1);
 
-namespace App\Services\Sync\JobStatus;
+namespace App\Services\Nordigen\Sync\JobStatus;
 
 /**
  * Class JobStatus.
- * @deprecated
  */
 class JobStatus
 {
-    /** @var string */
     public const JOB_WAITING = 'waiting_to_start';
-    /** @var string */
     public const JOB_RUNNING = 'job_running';
-    /** @var string */
     public const JOB_ERRORED = 'job_errored';
-    /** @var string */
-    public const JOB_DONE = 'job_done';
-    /** @var array */
-    public $errors;
-    /** @var array */
-    public $messages;
-    /** @var string */
-    public $status;
-    /** @var array */
-    public $warnings;
+    public const JOB_DONE    = 'job_done';
+    public array  $errors;
+    public array  $messages;
+    public string $status;
+    public array  $warnings;
 
     /**
      * ImportJobStatus constructor.
      */
     public function __construct()
     {
-        die('job status');
         $this->status   = self::JOB_WAITING;
         $this->errors   = [];
         $this->warnings = [];

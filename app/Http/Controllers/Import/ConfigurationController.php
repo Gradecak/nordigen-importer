@@ -186,7 +186,7 @@ class ConfigurationController extends Controller
             $account  = AccountInformationCollector::collectInformation($account);
             $return[] = $account;
         }
-        Cache::put($identifier, $return, 120);
+        Cache::put($identifier, $return, 1800); // half an hour
         return $return;
     }
 

@@ -38,6 +38,7 @@ return [
     'nordigen_key'    => env('NORDIGEN_KEY', ''),
     'nordigen_url'    => 'https://ob.nordigen.com',
     'use_sandbox'     => env('USE_SANDBOX'),
+    'use_ff3_cache'   => env('USE_FIREFLY_III_CACHE'),
     'skip_key_step'   => false,
     'trusted_proxies' => env('TRUSTED_PROXIES', ''),
     'connection'      => [

@@ -22,11 +22,10 @@
 
 declare(strict_types=1);
 
-namespace App\Services\Sync\JobStatus;
+namespace App\Services\Nordigen\Sync\JobStatus;
 
 /**
  * Trait ProgressInformation.
- * @deprecated
  */
 trait ProgressInformation
 {
@@ -40,7 +39,6 @@ trait ProgressInformation
      */
     public function getErrors(): array
     {
-        die('progress info get err');
         return $this->errors ?? [];
     }
 
@@ -49,7 +47,6 @@ trait ProgressInformation
      */
     public function getMessages(): array
     {
-        die('progress info get msg');
         return $this->messages ?? [];
     }
 
@@ -58,7 +55,6 @@ trait ProgressInformation
      */
     public function getWarnings(): array
     {
-        die('progress info get warn');
         return $this->warnings ?? [];
     }
 
@@ -67,7 +63,6 @@ trait ProgressInformation
      */
     public function setIdentifier(string $identifier): void
     {
-        die('progress info get set id');
         $this->identifier = $identifier;
     }
 
@@ -77,7 +72,6 @@ trait ProgressInformation
      */
     protected function addError(int $index, string $error): void
     {
-        die('progress info add err');
         $this->errors           = $this->errors ?? [];
         $this->errors[$index]   = $this->errors[$index] ?? [];
         $this->errors[$index][] = $error;
@@ -93,7 +87,6 @@ trait ProgressInformation
      */
     protected function addMessage(int $index, string $message): void
     {
-        die('progress info add msg');
         $this->messages           = $this->messages ?? [];
         $this->messages[$index]   = $this->messages[$index] ?? [];
         $this->messages[$index][] = $message;
@@ -109,7 +102,6 @@ trait ProgressInformation
      */
     protected function addWarning(int $index, string $warning): void
     {
-        die('progress info add warn');
         $this->warnings           = $this->warnings ?? [];
         $this->warnings[$index]   = $this->warnings[$index] ?? [];
         $this->warnings[$index][] = $warning;
