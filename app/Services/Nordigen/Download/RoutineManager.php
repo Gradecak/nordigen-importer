@@ -29,6 +29,7 @@ use App\Services\Configuration\Configuration;
 use JsonException;
 use Storage;
 use Str;
+use Log;
 
 /**
  * Class RoutineManager
@@ -133,7 +134,10 @@ class RoutineManager
      */
     public function start(): void
     {
+        Log::debug(sprintf('Now in %s', __METHOD__));
+
         // get transactions from Nordigen
+        Log::debug('Call transaction processor download.');
         $transactions = $this->transactionProcessor->download();
 
         // store on drive in downloadIdentifier.
@@ -143,5 +147,6 @@ class RoutineManager
         } catch (JsonException $e) {
             throw new ImporterErrorException($e->getMessage(), 0, $e);
         }
+        Log::debug('Done with start function!');
     }
 }

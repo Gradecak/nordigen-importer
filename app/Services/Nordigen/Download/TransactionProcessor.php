@@ -25,11 +25,9 @@ declare(strict_types=1);
 namespace App\Services\Nordigen\Download;
 
 use App\Services\Configuration\Configuration;
-use App\Services\Nordigen\Model\Transaction;
-use App\Services\Nordigen\Response\ArrayResponse;
-use App\Services\Nordigen\TokenManager;
 use App\Services\Nordigen\Request\GetTransactionsRequest;
 use App\Services\Nordigen\Response\GetTransactionsResponse;
+use App\Services\Nordigen\TokenManager;
 use Carbon\Carbon;
 use Log;
 
@@ -50,6 +48,7 @@ class TransactionProcessor
      */
     public function download(): array
     {
+        Log::debug(sprintf('Now in %s', __METHOD__));
         TokenManager::validateAllTokens();
         $this->notBefore = null;
         $this->notAfter  = null;
@@ -61,22 +60,22 @@ class TransactionProcessor
             $this->notAfter = new Carbon($this->configuration->getDateNotAfter());
         }
 
-        Log::debug('Now in download()');
+
         $accounts = array_keys($this->configuration->getAccounts());
         $return   = [];
         foreach ($accounts as $key => $account) {
+            Log::debug(sprintf('Going to download transactions for account %s "%s"', $key, $account));
             $account = (string) $account;
-            Log::debug(sprintf('Going to download transactions for account "%s"', $account));
 
             $accessToken = TokenManager::getAccessToken();
             $url         = config('importer.nordigen_url');
-
-
-            $request               = new GetTransactionsRequest($url, $accessToken, $account);
+            $request     = new GetTransactionsRequest($url, $accessToken, $account);
             /** @var GetTransactionsResponse $transactions */
-            $transactions = $request->get();
+            $transactions     = $request->get();
             $return[$account] = $this->filterTransactions($transactions);
+            Log::debug(sprintf('Done downloading transactions for account %s "%s"', $key, $account));
         }
+        Log::debug('Done with download');
 
         return $return;
     }

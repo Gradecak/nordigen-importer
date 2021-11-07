@@ -28,10 +28,10 @@
 
 import SyncStatus from "./components/sync/SyncStatus";
 import SyncMessages from "./components/sync/SyncMessages";
-
+import Vue from 'vue';
 require('./bootstrap');
 
-window.Vue = require('vue');
+window.Vue = Vue;
 
 /**
  * The following block of code may be used to automatically register your

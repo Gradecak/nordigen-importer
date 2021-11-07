@@ -439,5 +439,13 @@ class Configuration
         return $this->mapping;
     }
 
+    /**
+     * TODO add logic.
+     *
+     * @return bool
+     */
+    public function emptyMapping(): bool {
+        return true;
+    }
 
 }

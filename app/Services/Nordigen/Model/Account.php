@@ -230,6 +230,25 @@ class Account
     }
 
     /**
+     * @return string
+     */
+    public function getFullName(): string {
+        if('' !== $this->getName()) {
+            return $this->getName();
+        }
+        if('' !== $this->getDisplayName()) {
+            return $this->getDisplayName();
+        }
+        if('' !== $this->getOwnerName()) {
+            return $this->getOwnerName();
+        }
+        if('' !== $this->getIban()) {
+            return $this->getIban();
+        }
+        return 'x';
+    }
+
+    /**
      * @param string $name
      */
     public function setName(string $name): void
@@ -331,6 +350,71 @@ class Account
     public function setUsage(string $usage): void
     {
         $this->usage = $usage;
+    }
+
+    /**
+     * @return array
+     */
+    public function toLocalArray(): array
+    {
+        $array = [
+            'identifier'                 => $this->identifier,
+            'bban'                       => $this->bban,
+            'bic'                        => $this->bic,
+            'cash_account_type'          => $this->cashAccountType,
+            'currency'                   => $this->currency,
+            'details'                    => $this->details,
+            'display_name'               => $this->displayName,
+            'iban'                       => $this->iban,
+            'linked_accounts'            => $this->linkedAccounts,
+            'msisdn'                     => $this->msisdn,
+            'name'                       => $this->name,
+            'owner_address_unstructured' => $this->ownerAddressUnstructured,
+            'owner_name'                 => $this->ownerName,
+            'product'                    => $this->product,
+            'resource_id'                => $this->resourceId,
+            'status'                     => $this->status,
+            'usage'                      => $this->usage,
+            'balances'                   => [],
+        ];
+        /** @var Balance $balance */
+        foreach ($this->balances as $balance) {
+            $array['balances'][] = $balance->toLocalArray();
+        }
+
+
+        return $array;
+    }
+
+    /**
+     * @param array $array
+     * @return static
+     */
+    public static function fromLocalArray(array $array): self
+    {
+        $object                           = new self;
+        $object->identifier               = $array['identifier'];
+        $object->bban                     = $array['bban'];
+        $object->bic                      = $array['bic'];
+        $object->cashAccountType          = $array['cash_account_type'];
+        $object->currency                 = $array['currency'];
+        $object->details                  = $array['details'];
+        $object->displayName              = $array['display_name'];
+        $object->iban                     = $array['iban'];
+        $object->linkedAccounts           = $array['linked_accounts'];
+        $object->msisdn                   = $array['msisdn'];
+        $object->name                     = $array['name'];
+        $object->ownerAddressUnstructured = $array['owner_address_unstructured'];
+        $object->ownerName                = $array['owner_name'];
+        $object->product                  = $array['product'];
+        $object->resourceId               = $array['resource_id'];
+        $object->status                   = $array['status'];
+        $object->usage                    = $array['usage'];
+        $object->balances                 = [];
+        foreach ($array['balances'] as $arr) {
+            $object->balances[] = Balance::fromLocalArray($arr);
+        }
+        return $object;
     }
 
 

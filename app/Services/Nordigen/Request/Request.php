@@ -27,17 +27,13 @@ namespace App\Services\Nordigen\Request;
 
 use App\Exceptions\ImporterErrorException;
 use App\Exceptions\ImporterHttpException;
-use App\Exceptions\ImportException;
 use App\Services\Nordigen\Response\Response;
-use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\GuzzleException;
-use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Exception\TransferException;
 use JsonException;
 use Log;
-use RuntimeException;
 
 /**
  * Class Request
@@ -108,11 +104,8 @@ abstract class Request
             $fullUrl = sprintf('%s?%s', $fullUrl, http_build_query($this->parameters));
         }
         Log::debug(sprintf('authenticatedGet(%s)', $fullUrl));
-        Log::debug($this->getToken());
         $client = $this->getClient();
-        $res    = null;
         $body   = null;
-        $json   = null;
         try {
             $res = $client->request(
                 'GET', $fullUrl, [
@@ -120,13 +113,13 @@ abstract class Request
                              'Accept'        => 'application/json',
                              'Content-Type'  => 'application/json',
                              'Authorization' => sprintf('Bearer %s', $this->getToken()),
-                             'user-agent'   => sprintf('Firefly III Nordigen importer / %s / %s', config('importer.version'), config('auth.line_b')),
+                             'user-agent'    => sprintf('Firefly III Nordigen importer / %s / %s', config('importer.version'), config('auth.line_b')),
                          ],
                      ]
             );
         } catch (TransferException | GuzzleException $e) {
             Log::error(sprintf('TransferException: %s', $e->getMessage()));
-            // if response, parse as error response.re
+            // if response, parse as error response
             if (!$e->hasResponse()) {
                 throw new ImporterHttpException(sprintf('Exception: %s', $e->getMessage()), 0, $e);
             }
@@ -134,8 +127,10 @@ abstract class Request
             $json = [];
             try {
                 $json = json_decode($body, true, 512, JSON_THROW_ON_ERROR);
-            } catch (JsonException $e) {
-                Log::error(sprintf('Could not decode error: %s', $e->getMessage()), 0, $e);
+            } catch (JsonException $ee) {
+                Log::error(sprintf('Could not decode error: %s', $ee->getMessage()));
+                Log::error($body);
+                //throw new ImporterHttpException(sprintf('Could not decode JSON: %s', $e->getMessage()), 0, $e);
             }
             $exception       = new ImporterErrorException($e->getMessage(), 0, $e);
             $exception->json = $json;
@@ -166,6 +161,7 @@ abstract class Request
         if (null === $json) {
             throw new ImporterHttpException(sprintf('Body is empty. Status code is %d.', $res->getStatusCode()));
         }
+        Log::debug('Return JSON result of authenticatedGet');
 
         return $json;
     }
@@ -199,7 +195,7 @@ abstract class Request
             // TODO error response, not an exception.
             throw new ImporterHttpException(sprintf('AuthenticatedJsonPost: %s', $e->getMessage()), 0, $e);
         }
-        $body = (string)$res->getBody();
+        $body = (string) $res->getBody();
 
         try {
             $json = json_decode($body, true, 512, JSON_THROW_ON_ERROR);
@@ -271,7 +267,6 @@ abstract class Request
     {
         $this->token = $token;
     }
-
 
 
 }

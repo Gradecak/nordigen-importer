@@ -64,7 +64,7 @@
                                                     /> <label class="form-check-label"
                                                               {% if '' != information.nordigen.iban %}title="IBAN: {{ information.nordigen.iban }}"{% endif %}
                                                               for="do_import_{{ information.nordigen.identifier }}">
-                                                        Account "{{ information.nordigen.name }}"
+                                                        Account "{{ information.nordigen.getFullName }}"
                                                     </label>
                                                     {% if '' != information.nordigen.iban %}<br><small>IBAN: {{ information.nordigen.iban }}</small>{% endif %}
                                                 </td>

@@ -28,9 +28,9 @@ use App\Exceptions\ImportException;
 use App\Http\Controllers\Controller;
 use App\Services\Configuration\Configuration;
 use App\Services\Session\Constants;
-use App\Services\Sync\JobStatus\JobStatus;
-use App\Services\Sync\JobStatus\JobStatusManager;
-use App\Services\Sync\RoutineManager;
+use App\Services\Nordigen\Sync\JobStatus\JobStatus;
+use App\Services\Nordigen\Sync\JobStatus\JobStatusManager;
+use App\Services\Nordigen\Sync\RoutineManager;
 use ErrorException;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Http\JsonResponse;
@@ -93,7 +93,7 @@ class SyncController extends Controller
         session()->put(Constants::SYNC_JOB_IDENTIFIER, $syncIdentifier);
         app('log')->debug(sprintf('Stored "%s" under "%s"', $syncIdentifier, Constants::SYNC_JOB_IDENTIFIER));
 
-        return view('import.sync.index', compact('mainTitle', 'jobBackUrl', 'subTitle', 'syncIdentifier', 'downloadIdentifier'));
+        return view('import.006-sync.index', compact('mainTitle', 'jobBackUrl', 'subTitle', 'syncIdentifier', 'downloadIdentifier'));
     }
 
     /**

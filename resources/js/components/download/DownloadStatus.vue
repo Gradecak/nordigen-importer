@@ -97,7 +97,10 @@ export default {
     mounted() {
         console.log(`Mounted, check job at ${downloadStatusUrl}.`);
         this.getJobStatus();
-        //this.callStart();
+        setTimeout(function () {
+            console.log('Wait 3 seconds then go!');
+            this.callStart();
+        }.bind(this), 3000);
     },
     methods: {
         getJobStatus: function () {

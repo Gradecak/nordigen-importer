@@ -28,7 +28,7 @@ use Illuminate\Contracts\Filesystem\FileNotFoundException;
 use Storage;
 use Str;
 use UnexpectedValueException;
-
+use Log;
 /**
  * Class StorageService
  */
@@ -43,6 +43,7 @@ class StorageService
     {
         $disk = Storage::disk('uploads');
         if ($disk->exists($name)) {
+            Log::debug(sprintf('StorageService returns the content of file "%s"', $name));
             return $disk->get($name);
         }
         throw new UnexpectedValueException(sprintf('No such file %s', $name));
@@ -58,6 +59,7 @@ class StorageService
         $fileName = Str::random(20);
         $disk     = Storage::disk('uploads');
         $disk->put($fileName, $content);
+        Log::debug(sprintf('StorageService saves content into file "%s"', $fileName));
 
         return $fileName;
     }

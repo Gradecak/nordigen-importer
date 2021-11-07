@@ -24,9 +24,6 @@ declare(strict_types=1);
 
 namespace App\Services\Nordigen\Download\JobStatus;
 
-use JetBrains\PhpStorm\ArrayShape;
-use JetBrains\PhpStorm\Pure;
-
 /**
  * Class JobStatus
  */
@@ -35,11 +32,11 @@ class JobStatus
     public const JOB_WAITING = 'waiting_to_start';
     public const JOB_RUNNING = 'job_running';
     public const JOB_ERRORED = 'job_errored';
-    public const JOB_DONE = 'job_done';
-    public array $errors;
-    public array $messages;
+    public const JOB_DONE    = 'job_done';
+    public array  $errors;
+    public array  $messages;
     public string $status;
-    public array $warnings;
+    public array  $warnings;
 
     /**
      * JobStatus constructor.
@@ -57,7 +54,6 @@ class JobStatus
      *
      * @return static
      */
-    #[Pure]
     public static function fromArray(array $array): self
     {
         $config           = new self;
@@ -72,7 +68,6 @@ class JobStatus
     /**
      * @return array
      */
-    #[ArrayShape(['status' => "string", 'errors' => "array", 'warnings' => "array", 'messages' => "array"])]
     public function toArray(): array
     {
         return [

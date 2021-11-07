@@ -56,7 +56,6 @@ class SelectionController extends Controller
         $subTitle  = 'Select your country and the bank you wish to use.';
 
         // get banks and countries
-        TokenManager::validateAllTokens();
         $accessToken = TokenManager::getAccessToken();
         $url         = config('importer.nordigen_url');
 

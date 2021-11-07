@@ -100,8 +100,7 @@ class NordigenImport extends Command
         try {
             $configuration = json_decode(file_get_contents($config), true, 512, JSON_THROW_ON_ERROR);
         } catch (JsonException $e) {
-            // TODO error handling here.
-            $this->error('Some error');
+            $this->error(sprintf('Could not decode your configuration file: %s', $e->getMessage()));
             return 1;
         }
 

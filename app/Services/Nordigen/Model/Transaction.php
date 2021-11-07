@@ -34,7 +34,6 @@ class Transaction
     public string $bankTransactionCode;
     public Carbon $bookingDate;
     public string $checkId;
-    public string $creditorAccount;
     public string $creditorAgent;
     public string $creditorId;
     public string $creditorName;
@@ -56,17 +55,25 @@ class Transaction
     public Carbon $valueDate;
 
     // debtorAccount is an array, but is saved as strings
-    // iban
+    // iban, currency
     public string $debtorAccountIban;
+    public string $debtorAccountCurrency;
+
+    // creditorAccount is an array, but saved as strings:
+    // iban, currency
+    public string $creditorAccountIban;
+    public string $creditorAccountCurrency;
 
     // transactionAmount is an array, but is saved as strings
     // amount, currency
     public string $transactionAmount;
     public string $currencyCode;
 
-    // other custom fields
+    // my own custom fields
     public string $accountIdentifier;
 
+    // undocumented fields
+    public string $endToEndId;
 
     /**
      * @param $array
@@ -74,6 +81,7 @@ class Transaction
      */
     public static function fromArray($array): self
     {
+        Log::debug('Transaction from array', $array);
         $object = new self;
 
         $object->additionalInformation                  = $array['additionalInformation'] ?? '';
@@ -83,7 +91,6 @@ class Transaction
         $object->bookingDate                            = array_key_exists('bookingDate', $array) ? Carbon::createFromFormat('!Y-m-d', $array['bookingDate'], config('app.timezone')) : new Carbon(config('app.timezone'));
         $object->key                                    = $array['key'] ?? '';
         $object->checkId                                = $array['checkId'] ?? '';
-        $object->creditorAccount                        = $array['creditorAccount'] ?? '';
         $object->creditorAgent                          = $array['creditorAgent'] ?? '';
         $object->creditorId                             = $array['creditorId'] ?? '';
         $object->creditorName                           = $array['creditorName'] ?? '';
@@ -103,8 +110,17 @@ class Transaction
         $object->ultimateDebtor                         = $array['ultimateDebtor'] ?? '';
         $object->valueDate                              = array_key_exists('valueDate', $array) ? Carbon::createFromFormat('!Y-m-d', $array['valueDate'], config('app.timezone')) : new Carbon(config('app.timezone'));
 
+        // undocumented values
+        $object->endToEndId = $array['endToEndId'] ?? ''; // from Rabobank NL
+
+
         // array values:
-        $object->debtorAccountIban = $array['debtorAccount']['iban'] ?? '';
+        $object->creditorAccountIban     = $array['creditorAccount']['iban'] ?? '';
+        $object->creditorAccountCurrency = $array['creditorAccount']['currency'] ?? '';
+
+        $object->debtorAccountIban     = $array['debtorAccount']['iban'] ?? '';
+        $object->debtorAccountCurrency = $array['debtorAccount']['currency'] ?? '';
+
         $object->transactionAmount = $array['transactionAmount']['amount'] ?? '';
         $object->currencyCode      = $array['transactionAmount']['currency'] ?? '';
 
@@ -124,7 +140,9 @@ class Transaction
         if ('' !== $this->remittanceInformationUnstructured) {
             $description = $this->remittanceInformationUnstructured;
         }
-
+        if ('' === $description) {
+            Log::warning(sprintf('Transaction "%s" has no description.', $this->transactionId));
+        }
         return $description;
     }
 
@@ -134,10 +152,24 @@ class Transaction
      *
      * @return string|null
      */
-    public function getDestinationName(): ?string {
-        if('' !== $this->debtorName) {
-            return $this->debtorName;
+    public function getDestinationName(): ?string
+    {
+        if (1 === bccomp($this->transactionAmount, '0')) {
+            Log::debug(sprintf('Destination name is "debtor" because %s > 0.', $this->transactionAmount));
+            // amount is positive, its a deposit, return creditor
+            if ('' !== $this->debtorName) {
+                Log::debug(sprintf('Destination name is "%s"', $this->debtorName));
+                return $this->debtorName;
+            }
         }
+        if (1 !== bccomp($this->transactionAmount, '0')) {
+            Log::debug(sprintf('Destination name is "creditor" because %s < 0.', $this->transactionAmount));
+            if ('' !== $this->creditorName) {
+                Log::debug(sprintf('Destination name is "%s"', $this->creditorName));
+                return $this->creditorName;
+            }
+        }
+
         Log::warning(sprintf('Transaction "%s" has no destination account information.', $this->transactionId));
         return null;
     }
@@ -148,8 +180,9 @@ class Transaction
      *
      * @return string|null
      */
-    public function getSourceName(): ?string {
-        if('' !== $this->creditorName) {
+    public function getSourceName(): ?string
+    {
+        if ('' !== $this->creditorName) {
             return $this->creditorName;
         }
         Log::warning(sprintf('Transaction "%s" has no source account information.', $this->transactionId));
@@ -170,7 +203,6 @@ class Transaction
             'bank_transaction_code'                     => $this->bankTransactionCode,
             'booking_date'                              => $this->bookingDate->toW3cString(),
             'check_id'                                  => $this->checkId,
-            'creditor_account'                          => $this->creditorAccount,
             'creditor_agent'                            => $this->creditorAgent,
             'creditor_id'                               => $this->creditorId,
             'creditor_name'                             => $this->creditorName,
@@ -191,16 +223,23 @@ class Transaction
             'ultimate_debtor'                           => $this->ultimateDebtor,
             'value_date'                                => $this->valueDate->toW3cString(),
             'account_identifier'                        => $this->accountIdentifier,
-            'debtor_account'                            => [],
+            // array values:
+            'debtor_account'                            => [
+                'iban'     => $this->debtorAccountIban,
+                'currency' => $this->debtorAccountCurrency,
+            ],
+            'creditor_account'                          => [
+                'iban'     => $this->creditorAccountIban,
+                'currency' => $this->creditorAccountCurrency,
+            ],
             'transaction_amount'                        => [
                 'amount'   => $this->transactionAmount,
                 'currency' => $this->currencyCode,
             ],
+
+            // undocumented values:
+            'end_to_end_id'                             => $this->endToEndId,
         ];
-        if ('' !== $this->debtorAccountIban) {
-            // debtor is an array
-            $return['debtor_account'] = ['iban' => $this->debtorAccountIban];
-        }
 
         return $return;
     }
@@ -215,7 +254,6 @@ class Transaction
         $object->bankTransactionCode                    = $array['bank_transaction_code'];
         $object->bookingDate                            = Carbon::createFromFormat(DateTimeInterface::W3C, $array['booking_date']);
         $object->checkId                                = $array['check_id'];
-        $object->creditorAccount                        = $array['creditor_account'];
         $object->creditorAgent                          = $array['creditor_agent'];
         $object->creditorId                             = $array['creditor_id'];
         $object->creditorName                           = $array['creditor_name'];
@@ -235,10 +273,19 @@ class Transaction
         $object->ultimateCreditor                       = $array['ultimate_creditor'];
         $object->ultimateDebtor                         = $array['ultimate_debtor'];
         $object->valueDate                              = Carbon::createFromFormat(DateTimeInterface::W3C, $array['value_date']);
-        $object->debtorAccountIban                      = array_key_exists('iban', $array['debtor_account']) ? $array['debtor_account']['iban'] : '';
         $object->transactionAmount                      = $array['transaction_amount']['amount'];
         $object->currencyCode                           = $array['transaction_amount']['currency'];
         $object->accountIdentifier                      = $array['account_identifier'];
+
+        // undocumented values:
+        $object->endToEndId = $array['end_to_end_id'];
+
+        // TODO copy paste code.
+        $object->debtorAccountIban   = array_key_exists('iban', $array['debtor_account']) ? $array['debtor_account']['iban'] : '';
+        $object->creditorAccountIban = array_key_exists('iban', $array['creditor_account']) ? $array['creditor_account']['iban'] : '';
+
+        $object->debtorAccountCurrency   = array_key_exists('currency', $array['debtor_account']) ? $array['debtor_account']['currency'] : '';
+        $object->creditorAccountCurrency = array_key_exists('currency', $array['creditor_account']) ? $array['creditor_account']['currency'] : '';
 
         //$object-> = $array[''];
 

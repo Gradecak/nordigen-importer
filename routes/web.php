@@ -56,6 +56,10 @@ Route::any('/import/download/start', ['uses' => 'Import\DownloadController@start
 // 005 mapping
 Route::get('/import/mapping', ['uses' => 'Import\MappingController@index', 'as' => 'import.mapping.index']);
 
+// 006 sync
+Route::get('/import/sync', ['uses' => 'Import\SyncController@index', 'as' => 'import.sync.index']);
+Route::get('/import/sync/status', ['uses' => 'Import\SyncController@status', 'as' => 'import.sync.status']);
+Route::any('/import/sync/start', ['uses' => 'Import\SyncController@start', 'as' => 'import.sync.start']);
 
 
 // 999 list tokens (can be skipped)
@@ -79,9 +83,6 @@ Route::get('/import/mapping', ['uses' => 'Import\MappingController@index', 'as' 
 //Route::post('/import/mapping', ['uses' => 'Import\MappingController@postIndex', 'as' => 'import.mapping.post']);
 
 // send to Firefly III
-//Route::get('/import/sync', ['uses' => 'Import\SyncController@index', 'as' => 'import.sync.index']);
-//Route::any('/import/sync/start', ['uses' => 'Import\SyncController@start', 'as' => 'import.sync.start']);
-//Route::get('/import/sync/status', ['uses' => 'Import\SyncController@status', 'as' => 'import.sync.status']);
 
 // clear session
 Route::get('/flush','IndexController@flush')->name('flush');
@@ -91,5 +92,5 @@ Route::get('/back/start', 'NavController@toStart')->name('back.start');
 Route::get('/back/upload', 'NavController@toUpload')->name('back.upload');
 Route::get('/back/selection', 'NavController@toSelection')->name('back.selection');
 //Route::get('/back/connection', 'NavController@toConnection')->name('back.select-connection');
-//Route::get('/back/config', 'NavController@toConfig')->name('back.config');
+Route::get('/back/config', 'NavController@toConfig')->name('back.config');
 //Route::get('/back/mapping', 'NavController@toMapping')->name('back.mapping');

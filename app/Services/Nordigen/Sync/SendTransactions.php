@@ -57,6 +57,7 @@ class SendTransactions
      */
     public function send(array $transactions): array
     {
+        Log::debug(sprintf('Now in %s', __METHOD__));
         // create the tag, to be used later on.
         $this->tag     = sprintf('Nordigen Import on %s', date('Y-m-d \@ H:i'));
         $this->tagDate = date('Y-m-d');
@@ -70,14 +71,21 @@ class SendTransactions
 
         $url   = (string) config('importer.url');
         $token = (string) config('importer.access_token');
+        $total = count($transactions);
+        /**
+         * @var int   $index
+         * @var array $transaction
+         */
         foreach ($transactions as $index => $transaction) {
-            app('log')->debug(sprintf('Trying to send transaction #%d', $index), $transaction);
+            app('log')->debug(sprintf('[%d/%d] Trying to send transaction.', ($index + 1), $total), $transaction);
             $group = $this->sendTransaction($url, $token, $index, $transaction);
             if (null !== $group) {
+                app('log')->debug(sprintf('[%d/%d] Group exists, add tag.', ($index + 1), $total));
                 $this->addTagToGroup($group);
             }
+            app('log')->debug(sprintf('[%d/%d] Done sending transaction.', ($index + 1), $total));
         }
-
+        Log::debug(sprintf('Done with %s', __METHOD__));
         return [];
     }
 
@@ -130,6 +138,7 @@ class SendTransactions
      */
     private function sendTransaction(string $url, string $token, int $index, array $transaction): ?TransactionGroup
     {
+        Log::debug(sprintf('Now in %s', __METHOD__));
         $request = new PostTransactionRequest($url, $token);
 
         $request->setVerify(config('importer.connection.verify'));
@@ -176,7 +185,7 @@ class SendTransactions
                 )
             );
         }
-
+        Log::debug(sprintf('Done with %s', __METHOD__));
         return $group;
     }
 

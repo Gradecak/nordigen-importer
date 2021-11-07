@@ -67,6 +67,7 @@ class AccountInformationCollector
         /** @var ArrayResponse $response */
         $response    = $request->get();
         $information = $response->data['account'];
+        Log::debug('Collected information for account', $information);
 
         $account->setResourceId($information['resource_id'] ?? '');
         $account->setBban($information['bban'] ?? '');
@@ -94,7 +95,6 @@ class AccountInformationCollector
     {
         Log::debug(sprintf(sprintf('Now in %s(%s)', __METHOD__, $account->getIdentifier())));
 
-        TokenManager::validateAllTokens();
         $url         = config('importer.nordigen_url');
         $accessToken = TokenManager::getAccessToken();
         $request     = new GetAccountBalanceRequest($url, $accessToken, $account->getIdentifier());

@@ -166,11 +166,16 @@ class ConfigurationController extends Controller
     private function getNordigenAccounts(string $identifier): array
     {
         if (Cache::has($identifier)) {
-            return Cache::get($identifier);
+            $result = Cache::get($identifier);
+            $return = [];
+            foreach($result as $arr) {
+                $return[] = Account::fromLocalArray($arr);
+            }
+            Log::debug('Grab accounts from cache', $result);
+            return $return;
         }
         Log::debug(sprintf('Now in %s', __METHOD__));
         // get banks and countries
-        TokenManager::validateAllTokens();
         $accessToken = TokenManager::getAccessToken();
         $url         = config('importer.nordigen_url');
         $request     = new ListAccountsRequest($url, $identifier, $accessToken);
@@ -178,6 +183,7 @@ class ConfigurationController extends Controller
         $response = $request->get();
         $total    = count($response);
         $return   = [];
+        $cache = [];
         Log::debug(sprintf('Found %d accounts.', $total));
 
         /** @var Account $account */
@@ -185,8 +191,9 @@ class ConfigurationController extends Controller
             Log::debug(sprintf('[%d/%d] Now collecting information for account %s', ($index + 1), $total, $account->getIdentifier()));
             $account  = AccountInformationCollector::collectInformation($account);
             $return[] = $account;
+            $cache[] = $account->toLocalArray();
         }
-        Cache::put($identifier, $return, 1800); // half an hour
+        Cache::put($identifier, $cache, 1800); // half an hour
         return $return;
     }
 

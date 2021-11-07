@@ -41,7 +41,7 @@ class GetAccountInformationRequest extends Request
         $this->setBase($url);
         $this->setToken($token);
         $this->setIdentifier($identifier);
-        $this->setUrl(sprintf('/api/v2/accounts/%s/transactions/', $identifier));
+        $this->setUrl(sprintf('api/v2/accounts/%s/details/', $identifier));
     }
 
     /**
@@ -66,6 +66,7 @@ class GetAccountInformationRequest extends Request
      */
     public function get(): Response
     {
+
         $array = $this->authenticatedGet();
         return new ArrayResponse($array);
     }

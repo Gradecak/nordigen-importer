@@ -61,6 +61,7 @@ class TokenManager
      */
     public static function validateAllTokens(): void
     {
+        Log::debug(sprintf('Now at %s', __METHOD__));
         // is there a valid access and refresh token?
         if (self::hasValidRefreshToken() && self::hasValidAccessToken()) {
             return;
@@ -84,8 +85,10 @@ class TokenManager
      */
     public static function hasValidRefreshToken(): bool
     {
+        Log::debug(sprintf('Now at %s', __METHOD__));
         $hasToken = session()->has(Constants::REFRESH_TOKEN);
         if (false === $hasToken) {
+            Log::debug('No refresh token, so return false.');
             return false;
         }
         $tokenValidity = session()->get(Constants::REFRESH_EXPIRY_TIME) ?? 0;
@@ -97,11 +100,13 @@ class TokenManager
      */
     public static function hasExpiredRefreshToken(): bool
     {
+        Log::debug(sprintf('Now at %s', __METHOD__));
         $hasToken = session()->has(Constants::REFRESH_TOKEN);
         if (false === $hasToken) {
+            Log::debug('No refresh token, so return false.');
             return false;
         }
-        die('Here we are 3');
+        die(__METHOD__);
     }
 
     /**
@@ -110,6 +115,7 @@ class TokenManager
      */
     public static function getNewTokenSet(): void
     {
+        Log::debug(sprintf('Now at %s', __METHOD__));
         $client = new PostNewTokenRequest();
         /** @var TokenSetResponse $result */
         $result = $client->post();
@@ -128,6 +134,7 @@ class TokenManager
      */
     public static function getAccessToken(): string
     {
+        Log::debug(sprintf('Now at %s', __METHOD__));
         self::validateAllTokens();
         try {
             $token = session()->get(Constants::ACCESS_TOKEN);

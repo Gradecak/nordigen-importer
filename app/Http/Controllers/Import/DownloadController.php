@@ -27,6 +27,9 @@ namespace App\Http\Controllers\Import;
 
 use App\Http\Controllers\Controller;
 use App\Services\Configuration\Configuration;
+use App\Services\Nordigen\Download\JobStatus\JobStatus;
+use App\Services\Nordigen\Download\JobStatus\JobStatusManager;
+use App\Services\Nordigen\Download\RoutineManager;
 use App\Services\Session\Constants;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -47,9 +50,6 @@ class DownloadController extends Controller
     }
 
     /**
-     * @throws \Psr\Container\ContainerExceptionInterface
-     * @throws \Psr\Container\NotFoundExceptionInterface
-     * @throws \App\Exceptions\ImporterErrorException
      */
     public function index()
     {

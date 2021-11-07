@@ -22,6 +22,8 @@
 
 namespace App\Services\Nordigen\Model;
 
+use Log;
+
 /**
  * Class Balance
  */
@@ -31,6 +33,7 @@ class Balance
     public string $currency;
     public string $type;
     public string $date;
+    public string $lastChangeDateTime;
 
     /**
      * @param array $data
@@ -38,12 +41,45 @@ class Balance
      */
     public static function createFromArray(array $data): self
     {
-        $self           = new self;
-        $self->amount   = $data['balanceAmount']['amount'];
-        $self->currency = $data['balanceAmount']['currency'];
-        $self->type     = $data['balanceType'];
-        $self->date     = $data['referenceDate'];
-        return $self;
+        Log::debug('Create Balance from array', $data);
+        $self                     = new self;
+        $self->amount             = $data['balanceAmount']['amount'];
+        $self->currency           = $data['balanceAmount']['currency'];
+        $self->type               = $data['balanceType'];
+        $self->date               = $data['referenceDate'] ?? '';
+        $self->lastChangeDateTime = $data['lastChangeDateTime'] ?? '';
 
+        if ('' === $self->date && '' === $self->lastChangeDateTime) {
+            Log::warning('Balance has invalid date!');
+        }
+        return $self;
+    }
+
+    /**
+     * @return array
+     */
+    public function toLocalArray(): array
+    {
+        return [
+            'amount'                => $this->amount,
+            'currency'              => $this->currency,
+            'type'                  => $this->type,
+            'date'                  => $this->date,
+            'last_change_date_time' => $this->lastChangeDateTime,
+        ];
+    }
+
+    /**
+     * @return $this
+     */
+    public static function fromLocalArray(array $array): self
+    {
+        $object                     = new self;
+        $object->amount             = $array['amount'];
+        $object->currency           = $array['currency'];
+        $object->type               = $array['type'];
+        $object->date               = $array['date'];
+        $object->lastChangeDateTime = $array['last_change_date_time'];
+        return $object;
     }
 }
