@@ -176,6 +176,7 @@ class RoutineManager
         // generate Firefly III ready transactions:
         app('log')->debug('Generating Firefly III transactions.');
         $this->transactionGenerator->collectTargetAccounts();
+        $this->transactionGenerator->collectNordigenAccounts();
 
         $transactions = $this->transactionGenerator->getTransactions($array);
         app('log')->debug(sprintf('Generated %d Firefly III transactions.', count($transactions)));

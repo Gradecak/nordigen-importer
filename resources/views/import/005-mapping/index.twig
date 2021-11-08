@@ -14,7 +14,7 @@
         </div>
         <div class="row">
             <div class="col-lg-12">
-                <p class="lead">Map Spectre data to your Firefly III data.</p>
+                <p class="lead">Map Nordigen data to your Firefly III data.</p>
                 <p>
                     Check out the list of accounts below, and use the dropdowns to link these entries
                     to data in your Firefly III installation. The <!-- TODO -->
@@ -36,10 +36,10 @@
                             <h3>Accounts</h3>
                             <table class="table">
                                 <tr>
-                                    <th style="width:50%;">Spectre account</th>
+                                    <th style="width:50%;">Nordigen account</th>
                                     <th style="width:50%;">Firefly III account</th>
                                 </tr>
-                                {% for value in spectreAccounts %}
+                                {% for value in importerAccounts %}
                                     <tr>
                                         <td>
                                             <code>{{ value }}</code>
@@ -68,6 +68,7 @@
                                     </tr>
                                 {% endfor %}
                             </table>
+                            {#
                             <h3>Categories</h3>
                             <table class="table">
                                 <tr>
@@ -99,6 +100,7 @@
                                     </tr>
                                 {% endfor %}
                             </table>
+                            #}
                             <div class="row">
                                 <div class="col-lg-6">
                                     <!-- go back to roles -->
