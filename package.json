@@ -21,7 +21,7 @@
         "vue-loader": "^15",
         "vue-template-compiler": "^2.6",
 
-        "axios": "^0.21",
+        "axios": "^0.24",
         "laravel-mix": "^6.0.6",
         "lodash": "^4.17.19",
         "postcss": "^8.1.14"
