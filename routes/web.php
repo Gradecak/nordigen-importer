@@ -55,6 +55,7 @@ Route::any('/import/download/start', ['uses' => 'Import\DownloadController@start
 
 // 005 mapping
 Route::get('/import/mapping', ['uses' => 'Import\MappingController@index', 'as' => 'import.mapping.index']);
+Route::post('/import/mapping', ['uses' => 'Import\MappingController@postIndex', 'as' => 'import.mapping.post']);
 
 // 006 sync
 Route::get('/import/sync', ['uses' => 'Import\SyncController@index', 'as' => 'import.sync.index']);
@@ -80,7 +81,6 @@ Route::any('/import/sync/start', ['uses' => 'Import\SyncController@start', 'as' 
 
 // map data:
 //
-//Route::post('/import/mapping', ['uses' => 'Import\MappingController@postIndex', 'as' => 'import.mapping.post']);
 
 // send to Firefly III
 
@@ -93,4 +93,4 @@ Route::get('/back/upload', 'NavController@toUpload')->name('back.upload');
 Route::get('/back/selection', 'NavController@toSelection')->name('back.selection');
 //Route::get('/back/connection', 'NavController@toConnection')->name('back.select-connection');
 Route::get('/back/config', 'NavController@toConfig')->name('back.config');
-//Route::get('/back/mapping', 'NavController@toMapping')->name('back.mapping');
+Route::get('/back/mapping', 'NavController@toMapping')->name('back.mapping');

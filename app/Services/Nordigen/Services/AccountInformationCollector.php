@@ -60,7 +60,6 @@ class AccountInformationCollector
     {
         Log::debug(sprintf(sprintf('Now in %s(%s)', __METHOD__, $account->getIdentifier())));
 
-        TokenManager::validateAllTokens();
         $url         = config('importer.nordigen_url');
         $accessToken = TokenManager::getAccessToken();
         $request     = new GetAccountInformationRequest($url, $accessToken, $account->getIdentifier());

@@ -24,7 +24,9 @@ namespace App\Services\Nordigen\Model;
 
 use Carbon\Carbon;
 use DateTimeInterface;
+use JsonException;
 use Log;
+use Ramsey\Uuid\Uuid;
 
 class Transaction
 {
@@ -76,12 +78,13 @@ class Transaction
     public string $endToEndId;
 
     /**
+     * Creates a transaction from a downloaded array.
      * @param $array
      * @return self
      */
     public static function fromArray($array): self
     {
-        Log::debug('Transaction from array', $array);
+        //Log::debug('Transaction from array', $array);
         $object = new self;
 
         $object->additionalInformation                  = $array['additionalInformation'] ?? '';
@@ -126,6 +129,18 @@ class Transaction
 
         // other fields:
         $object->accountIdentifier = '';
+
+        // generate transactionID if empty:
+        if ('' === $object->transactionId) {
+            $hash = hash('sha256', (string) microtime());
+            try {
+                $hash = hash('sha256', json_encode($array, JSON_THROW_ON_ERROR));
+            } catch (JsonException $e) {
+                Log::error(sprintf('Could not parse array into JSON: %s', $e->getMessage()));
+            }
+            $object->transactionId =  Uuid::uuid5(config('importer.namespace'), $hash);
+        }
+        Log::debug(sprintf('Downloaded transaction with ID "%s"', $object->transactionId));
 
         return $object;
     }
@@ -310,6 +325,10 @@ class Transaction
         return $return;
     }
 
+    /**
+     * @param array $array
+     * @return static
+     */
     public static function fromLocalArray(array $array): self
     {
         $object = new self;
@@ -355,6 +374,16 @@ class Transaction
 
         //$object-> = $array[''];
 
+        // generate transactionID if empty:
+        if ('' === $object->transactionId) {
+            $hash = hash('sha256', (string) microtime());
+            try {
+                $hash = hash('sha256', json_encode($array, JSON_THROW_ON_ERROR));
+            } catch (JsonException $e) {
+                Log::error(sprintf('Could not parse array into JSON: %s', $e->getMessage()));
+            }
+            $object->transactionId =  Uuid::uuid5(config('importer.namespace'), $hash);
+        }
 
         return $object;
     }

@@ -50,6 +50,7 @@ class Configuration
     private bool    $doMapping;
     private array   $accounts;
     private array   $mapping;
+    private array   $accountTypes;
 
     /**
      * Configuration constructor.
@@ -71,6 +72,7 @@ class Configuration
         $this->doMapping                   = false;
         $this->accounts                    = [];
         $this->mapping                     = [];
+        $this->accountTypes                = [];
 
         $this->version = self::VERSION;
     }
@@ -149,7 +151,7 @@ class Configuration
      */
     public static function fromFile(array $data): self
     {
-        Log::debug('Now in Configuration::fromFile', $data);
+        Log::debug('Now in Configuration::fromFile');
         return self::fromArray($data);
     }
 
@@ -178,6 +180,7 @@ class Configuration
         $object->doMapping                   = $array['do_mapping'] ?? false;
         $object->accounts                    = $array['accounts'] ?? [];
         $object->mapping                     = $array['mapping'] ?? [];
+        $object->accountTypes                = $array['account_types'] ?? [];
 
 
         return $object;
@@ -294,6 +297,7 @@ class Configuration
             'do_mapping'                    => $this->doMapping,
             'accounts'                      => $this->accounts,
             'mapping'                       => $this->mapping,
+            'account_types'                 => $this->accountTypes,
         ];
     }
 
@@ -398,6 +402,16 @@ class Configuration
     }
 
     /**
+     * @param array $accountTypes
+     */
+    public function setAccountTypes(array $accountTypes): void
+    {
+        $this->accountTypes = $accountTypes;
+    }
+
+
+
+    /**
      * @return array
      */
     public function getAccounts(): array
@@ -434,18 +448,36 @@ class Configuration
     /**
      * @return array
      */
+    public function getAccountTypes(): array
+    {
+        return $this->accountTypes;
+    }
+
+
+
+    /**
+     * @return array
+     */
     public function getMapping(): array
     {
         return $this->mapping;
     }
 
     /**
-     * TODO add logic.
-     *
+     * @param array $mapping
+     */
+    public function setMapping(array $mapping): void
+    {
+        $this->mapping = $mapping;
+    }
+
+
+    /**
      * @return bool
      */
-    public function emptyMapping(): bool {
-        return true;
+    public function emptyMapping(): bool
+    {
+        return 0 === count($this->mapping);
     }
 
 }

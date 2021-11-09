@@ -114,6 +114,9 @@ class UploadController extends Controller
         // user has uploaded (or not) a config file:
         session()->put(Constants::HAS_UPLOAD, 'true');
 
+        // TODO if there is a requisition in the config file, first validate it.
+        // Might be possible to redirect user.
+
         // next step: select a country + bank
         return redirect(route('import.selection.index'));
     }

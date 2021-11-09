@@ -25,8 +25,10 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Import;
 
+use App\Exceptions\ImporterErrorException;
 use App\Http\Controllers\Controller;
 use App\Services\Configuration\Configuration;
+use App\Services\Nordigen\Model\Transaction;
 use App\Services\Session\Constants;
 use GrumpyDictator\FFIIIApiSupport\Exceptions\ApiHttpException;
 use GrumpyDictator\FFIIIApiSupport\Request\GetAccountsRequest;
@@ -38,6 +40,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use JsonException;
+use Log;
 
 /**
  * Class MappingController.
@@ -74,8 +77,8 @@ class MappingController extends Controller
         $mapping = $configuration->getMapping();
 
         // parse all opposing accounts from the download
-        $spectreAccounts   = $this->getOpposingAccounts();
-        $spectreCategories = $this->getSpectreCategories();
+        $importerAccounts   = $this->getOpposingAccounts();
+        //$spectreCategories = $this->getSpectreCategories();
 
         // get accounts from Firefly III
         $ff3Accounts   = $this->getFireflyIIIAccounts();
@@ -85,31 +88,41 @@ class MappingController extends Controller
 
 
         return view(
-            'import.mapping.index',
+            'import.005-mapping.index',
             compact(
                 'mainTitle', 'subTitle', 'configuration', 'ff3Categories',
-                'spectreAccounts', 'spectreCategories', 'ff3Accounts', 'mapping'
+                'importerAccounts', 'ff3Accounts', 'mapping'
             )
         );
     }
 
     /**
      * @return array
-     * @throws FileNotFoundException
+     * @throws ImporterErrorException
      */
     private function getOpposingAccounts(): array
     {
+        Log::debug(sprintf('Now in %s', __METHOD__));
         $downloadIdentifier = session()->get(Constants::DOWNLOAD_JOB_IDENTIFIER);
         $disk               = Storage::disk('downloads');
         $json               = $disk->get($downloadIdentifier);
-        $array              = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
-        $opposing           = [];
+        try {
+            $array = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
+        } catch (JsonException $e) {
+            throw new ImporterErrorException(sprintf('Could not decode download: %s', $e->getMessage()), 0, $e);
+        }
+        $opposing = [];
 
         /** @var array $transaction */
         foreach ($array as $accountId => $transactions) {
+            Log::debug(sprintf('Now looping account %s', $accountId));
+            $total = count($transactions);
             /** @var array $transaction */
-            foreach ($transactions as $transaction) {
-                $opposing[] = $transaction['extra']['payee'] ?? '';
+            foreach ($transactions as $index => $transaction) {
+                Log::debug(sprintf('[%s/%s] Parsing transaction', ($index+1), $total));
+                $object = Transaction::fromLocalArray($transaction);
+                $opposing[] = (string)$object->getDestinationName();
+                $opposing[] = (string)$object->getSourceName();
             }
         }
         $filtered = array_filter(
@@ -124,44 +137,12 @@ class MappingController extends Controller
 
     /**
      * @return array
-     * @throws JsonException
-     * @throws FileNotFoundException
-     */
-    private function getSpectreCategories(): array
-    {
-        $downloadIdentifier = session()->get(Constants::DOWNLOAD_JOB_IDENTIFIER);
-        $disk               = Storage::disk('downloads');
-        $json               = $disk->get($downloadIdentifier);
-        $array              = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
-        $categories         = [];
-
-        /** @var array $transaction */
-        foreach ($array as $accountId => $transactions) {
-            /** @var array $transaction */
-            foreach ($transactions as $transaction) {
-                if (isset($transaction['category'])) {
-                    $categories[] = $transaction['category'];
-                }
-            }
-        }
-        $filtered = array_filter(
-            $categories,
-            static function (string $value) {
-                return '' !== $value;
-            }
-        );
-
-        return array_unique($categories);
-    }
-
-    /**
-     * @return array
      * @throws ApiHttpException
      */
     private function getFireflyIIIAccounts(): array
     {
-        $token   = (string)config('importer.access_token');
-        $url     = (string)config('importer.url');
+        $token   = (string) config('importer.access_token');
+        $url     = (string) config('importer.url');
         $request = new GetAccountsRequest($url, $token);
 
         $request->setVerify(config('importer.connection.verify'));
@@ -175,9 +156,9 @@ class MappingController extends Controller
             if ('reconciliation' === $type || 'initial-balance' === $type) {
                 continue;
             }
-            $id                 = (int)$entry->id;
+            $id                 = (int) $entry->id;
             $return[$type][$id] = $entry->name;
-            if ('' !== (string)$entry->iban) {
+            if ('' !== (string) $entry->iban) {
                 $return[$type][$id] = sprintf('%s (%s)', $entry->name, $entry->iban);
             }
         }
@@ -194,8 +175,8 @@ class MappingController extends Controller
      */
     private function getFireflyIIICategories(): array
     {
-        $token   = (string)config('importer.access_token');
-        $url     = (string)config('importer.url');
+        $token   = (string) config('importer.access_token');
+        $url     = (string) config('importer.url');
         $request = new GetCategoriesRequest($url, $token);
 
         $request->setVerify(config('importer.connection.verify'));
@@ -205,7 +186,7 @@ class MappingController extends Controller
         $result = $request->get();
         $return = [];
         foreach ($result as $entry) {
-            $id          = (int)$entry->id;
+            $id          = (int) $entry->id;
             $return[$id] = $entry->name;
         }
         asort($return);
@@ -225,11 +206,9 @@ class MappingController extends Controller
         // post mapping is not particularly complex.
         $result = $request->all();
 
-        $categoryMapping = $result['mapping_categories'] ?? [];
         $accountMapping  = $result['mapping_accounts'] ?? [];
         $mapping         = [
             'accounts'   => $accountMapping,
-            'categories' => $categoryMapping,
         ];
 
         $accountTypes  = $result['account_type'] ?? [];
