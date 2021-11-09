@@ -274,6 +274,7 @@ class GenerateTransactions
             $return['transactions'][0]['amount'] = bcmul($entry->transactionAmount, '-1');
 
             // source is a Nordigen account
+            // TODO entry may not exist, then what?
             $return['transactions'][0]['source_id'] = (int) $this->accounts[$accountId];
 
             // destination iban valid?
