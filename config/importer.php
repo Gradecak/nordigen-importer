@@ -22,7 +22,7 @@
 
 declare(strict_types=1);
 
-$fireflyIIIURL = env('FIREFLY_III_URL');
+$fireflyIIIURL = (string) env('FIREFLY_III_URL');
 if ('/' === substr($fireflyIIIURL, -1)) {
     $fireflyIIIURL = rtrim($fireflyIIIURL, '/');
 }
