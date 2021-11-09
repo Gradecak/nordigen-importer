@@ -25,6 +25,8 @@ declare(strict_types=1);
 namespace App\Services\Nordigen\Sync;
 
 use App\Services\Configuration\Configuration;
+use App\Services\Nordigen\Sync\JobStatus\JobStatus;
+use App\Services\Nordigen\Sync\JobStatus\JobStatusManager;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Log;
@@ -170,13 +172,11 @@ class RoutineManager
         $array = $this->grabber->getDownload($this->downloadIdentifier);
         Log::debug('Done getting Nordigen download.');
 
-        Log::error('This is where the magic happens.');
-
-
         // generate Firefly III ready transactions:
         app('log')->debug('Generating Firefly III transactions.');
         $this->transactionGenerator->collectTargetAccounts();
         $this->transactionGenerator->collectNordigenAccounts();
+
 
         $transactions = $this->transactionGenerator->getTransactions($array);
         app('log')->debug(sprintf('Generated %d Firefly III transactions.', count($transactions)));

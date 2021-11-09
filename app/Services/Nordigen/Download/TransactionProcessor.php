@@ -49,7 +49,6 @@ class TransactionProcessor
     public function download(): array
     {
         Log::debug(sprintf('Now in %s', __METHOD__));
-        TokenManager::validateAllTokens();
         $this->notBefore = null;
         $this->notAfter  = null;
         if ('' !== (string) $this->configuration->getDateNotBefore()) {
@@ -64,9 +63,8 @@ class TransactionProcessor
         $accounts = array_keys($this->configuration->getAccounts());
         $return   = [];
         foreach ($accounts as $key => $account) {
-            Log::debug(sprintf('Going to download transactions for account %s "%s"', $key, $account));
+            Log::debug(sprintf('Going to download transactions for account #%d "%s"', $key, $account));
             $account = (string) $account;
-
             $accessToken = TokenManager::getAccessToken();
             $url         = config('importer.nordigen_url');
             $request     = new GetTransactionsRequest($url, $accessToken, $account);

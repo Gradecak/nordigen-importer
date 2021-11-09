@@ -151,7 +151,7 @@ class Configuration
      */
     public static function fromFile(array $data): self
     {
-        Log::debug('Now in Configuration::fromFile', $data);
+        Log::debug('Now in Configuration::fromFile');
         return self::fromArray($data);
     }
 

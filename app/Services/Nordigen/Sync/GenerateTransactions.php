@@ -98,6 +98,7 @@ class GenerateTransactions
             Log::debug(sprintf('Collected %s (%s) under ID #%d', $iban, $entry->type, $entry->id));
             $return[$iban] = $entry->id;
             $types[$iban]  = $entry->type;
+            Log::debug(sprintf('Added account #%d (%s) with IBAN "%s"', $entry->id, $entry->type, $iban));
         }
         $this->targetAccounts = $return;
         $this->targetTypes    = $types;
@@ -112,6 +113,12 @@ class GenerateTransactions
         }
     }
 
+    /**
+     * TODO the result of this method is currently not used.
+     *
+     * @throws \App\Exceptions\ImporterErrorException
+     * @throws \App\Exceptions\ImporterHttpException
+     */
     public function collectNordigenAccounts(): void
     {
         if (config('importer.use_ff3_cache') && Cache::has('collect_nordigen_accounts')) {
@@ -137,11 +144,12 @@ class GenerateTransactions
             $accountInfo               = $response->data['account'];
             $set['iban']               = $accountInfo['iban'] ?? '';
             $info[$nordigenIdentifier] = $set;
+            Log::debug(sprintf('Collected IBAN "%s" for Nordigen account "%s"', $set['iban'], $nordigenIdentifier));
         }
         $this->nordigenAccountInfo = $info;
         if (config('importer.use_ff3_cache')) {
             Cache::put('collect_nordigen_accounts', $info, 86400); // 24h
-            Log::info('Stored collected Nordigen accounts in cache.', $info);
+            Log::info('Stored collected Nordigen accounts in cache.');
         }
     }
 
@@ -185,7 +193,8 @@ class GenerateTransactions
      */
     private function generateTransaction(string $accountId, Transaction $entry): array
     {
-        Log::debug('Original Nordigen transaction', $entry->toLocalArray());
+        //Log::debug('Original Nordigen transaction', $entry->toLocalArray());
+        Log::debug(sprintf('Nordigen transaction: "%s" with amount %s %s', $entry->getDescription(), $entry->currencyCode, $entry->transactionAmount));
 
         $return = [
             'apply_rules'             => $this->configuration->isRules(),
@@ -237,6 +246,7 @@ class GenerateTransactions
 
             $mappedId = null;
             if (isset($return['transactions'][0]['source_name'])) {
+                Log::debug(sprintf('Check if "%s" is mapped to an account by the user.', $return['transactions'][0]['source_name']));
                 $mappedId = $this->getMappedAccountId($return['transactions'][0]['source_name']);
             }
 
@@ -248,6 +258,7 @@ class GenerateTransactions
                 // catch error here:
                 try {
                     $return['transactions'][0]['type'] = $this->getTransactionType($mappedType, 'asset');
+                    Log::debug(sprintf('Transaction type seems to be %s', $return['transactions'][0]['type']));
                 } catch (ImportException $e) {
                     Log::error($e->getMessage());
                     Log::info('Will not use mapped ID, Firefly III account is of the wrong type.');
@@ -283,6 +294,7 @@ class GenerateTransactions
 
             $mappedId = null;
             if (isset($return['transactions'][0]['destination_name'])) {
+                Log::debug(sprintf('Check if "%s" is mapped to an account by the user.', $return['transactions'][0]['destination_name']));
                 $mappedId = $this->getMappedAccountId($return['transactions'][0]['destination_name']);
             }
 
@@ -295,6 +307,7 @@ class GenerateTransactions
                 // catch error here:
                 try {
                     $return['transactions'][0]['type'] = $this->getTransactionType('asset', $mappedType);
+                    Log::debug(sprintf('Transaction type seems to be %s', $return['transactions'][0]['type']));
                 } catch (ImportException $e) {
                     Log::error($e->getMessage());
                     Log::info('Will not use mapped ID, Firefly III account is of the wrong type.');
@@ -305,7 +318,7 @@ class GenerateTransactions
             }
         }
 
-        app('log')->debug(sprintf('Parsed Nordigen transaction "%s".', $entry->transactionId), $return);
+        app('log')->debug(sprintf('Parsed Nordigen transaction "%s".', $entry->transactionId));
 
 
         return $return;
