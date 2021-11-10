@@ -48,9 +48,9 @@ class Transaction
     public string $proprietaryBank;
     public string $purposeCode;
     public string $remittanceInformationStructured;
-    public string $remittanceInformationStructuredArray;
+    public array  $remittanceInformationStructuredArray;
     public string $remittanceInformationUnstructured;
-    public string $remittanceInformationUnstructuredArray;
+    public array  $remittanceInformationUnstructuredArray;
     public string $transactionId;
     public string $ultimateCreditor;
     public string $ultimateDebtor;
@@ -105,9 +105,9 @@ class Transaction
         $object->proprietaryBank                        = $array['proprietaryBank'] ?? '';
         $object->purposeCode                            = $array['purposeCode'] ?? '';
         $object->remittanceInformationStructured        = $array['remittanceInformationStructured'] ?? '';
-        $object->remittanceInformationStructuredArray   = $array['remittanceInformationStructuredArray'] ?? '';
+        $object->remittanceInformationStructuredArray   = $array['remittanceInformationStructuredArray'] ?? [];
         $object->remittanceInformationUnstructured      = $array['remittanceInformationUnstructured'] ?? '';
-        $object->remittanceInformationUnstructuredArray = $array['remittanceInformationUnstructuredArray'] ?? '';
+        $object->remittanceInformationUnstructuredArray = $array['remittanceInformationUnstructuredArray'] ?? [];
         $object->transactionId                          = $array['transactionId'] ?? '';
         $object->ultimateCreditor                       = $array['ultimateCreditor'] ?? '';
         $object->ultimateDebtor                         = $array['ultimateDebtor'] ?? '';
@@ -138,7 +138,7 @@ class Transaction
             } catch (JsonException $e) {
                 Log::error(sprintf('Could not parse array into JSON: %s', $e->getMessage()));
             }
-            $object->transactionId =  Uuid::uuid5(config('importer.namespace'), $hash);
+            $object->transactionId = Uuid::uuid5(config('importer.namespace'), $hash);
         }
         Log::debug(sprintf('Downloaded transaction with ID "%s"', $object->transactionId));
 
@@ -382,7 +382,7 @@ class Transaction
             } catch (JsonException $e) {
                 Log::error(sprintf('Could not parse array into JSON: %s', $e->getMessage()));
             }
-            $object->transactionId =  Uuid::uuid5(config('importer.namespace'), $hash);
+            $object->transactionId = Uuid::uuid5(config('importer.namespace'), $hash);
         }
 
         return $object;
