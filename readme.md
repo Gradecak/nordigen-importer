@@ -143,11 +143,8 @@ This work [is licensed](https://github.com/firefly-iii/nordigen-importer/blob/ma
 
 You can contact me at [james@firefly-iii.org](mailto:james@firefly-iii.org), you may open an issue in the [main repository](https://github.com/firefly-iii/firefly-iii) or contact me through the various social media pages there are: [gitter](https://gitter.im/firefly-iii/firefly-iii) and [Twitter](https://twitter.com/Firefly_III).
 
-[![Scrutinizer][scrutinizer-shield]][scrutinizer-uri]
 [![Requires PHP8.0][php-shield]][php-uri]
 
-[scrutinizer-shield]: https://img.shields.io/scrutinizer/g/firefly-iii/nordigen-importer.svg?style=flat-square
-[scrutinizer-uri]: https://scrutinizer-ci.com/g/firefly-iii/nordigen-importer/
 [php-shield]: https://img.shields.io/badge/php-8.0-red.svg?style=flat-square
 [php-uri]: https://secure.php.net/downloads.php
 [packagist-shield]: https://img.shields.io/packagist/v/firefly-iii/nordigen-importer.svg?style=flat-square
