@@ -16,7 +16,7 @@ use Log;
  */
 class AutoImport extends Command
 {
-    use HaveAccess, VerifyJSON, StartImport, AutoImports;
+    use HaveAccess, VerifyJSON, AutoImports; // StartImport
 
     /**
      * The console command description.
@@ -30,8 +30,7 @@ class AutoImport extends Command
      * @var string
      */
     protected $signature = 'importer:auto-import {directory : The directory from which to import automatically.}';
-    /** @var string */
-    private $directory = './';
+    private string $directory = './';
 
     /**
      * Execute the console command.
@@ -40,6 +39,8 @@ class AutoImport extends Command
      */
     public function handle(): int
     {
+        $this->error('TODO, sorry.');
+        return 1;
         $access = $this->haveAccess();
         if (false === $access) {
             $this->error('Could not connect to your local Firefly III instance.');

@@ -24,6 +24,8 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Import;
 
+use App\Exceptions\ImporterErrorException;
+use App\Exceptions\ImporterHttpException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ConfigurationPostRequest;
 use App\Services\Configuration\Configuration;
@@ -162,13 +164,14 @@ class ConfigurationController extends Controller
     /**
      * List Nordigen accounts with account details, balances, and 2 transactions (if present)
      * @return array
+     * @throws ImporterErrorException
      */
     private function getNordigenAccounts(string $identifier): array
     {
         if (Cache::has($identifier)) {
             $result = Cache::get($identifier);
             $return = [];
-            foreach($result as $arr) {
+            foreach ($result as $arr) {
                 $return[] = Account::fromLocalArray($arr);
             }
             Log::debug('Grab accounts from cache', $result);
@@ -180,10 +183,15 @@ class ConfigurationController extends Controller
         $url         = config('importer.nordigen_url');
         $request     = new ListAccountsRequest($url, $identifier, $accessToken);
         /** @var ListAccountsResponse $response */
-        $response = $request->get();
-        $total    = count($response);
-        $return   = [];
-        $cache = [];
+        try {
+            $response = $request->get();
+        } catch (ImporterErrorException $e) {
+        } catch (ImporterHttpException $e) {
+            throw new ImporterErrorException($e->getMessage(), 0, $e);
+        }
+        $total  = count($response);
+        $return = [];
+        $cache  = [];
         Log::debug(sprintf('Found %d accounts.', $total));
 
         /** @var Account $account */
@@ -191,7 +199,7 @@ class ConfigurationController extends Controller
             Log::debug(sprintf('[%d/%d] Now collecting information for account %s', ($index + 1), $total, $account->getIdentifier()));
             $account  = AccountInformationCollector::collectInformation($account);
             $return[] = $account;
-            $cache[] = $account->toLocalArray();
+            $cache[]  = $account->toLocalArray();
         }
         Cache::put($identifier, $cache, 1800); // half an hour
         return $return;

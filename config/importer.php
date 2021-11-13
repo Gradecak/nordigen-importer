@@ -28,12 +28,12 @@ if ('/' === substr($fireflyIIIURL, -1)) {
 }
 
 return [
-    'version'         => '0.2.0',
+    'version'         => '0.3.0',
     'access_token'    => env('FIREFLY_III_ACCESS_TOKEN'),
     'url'             => $fireflyIIIURL,
     'vanity_url'      => envNonEmpty('VANITY_URL'),
     'upload_path'     => storage_path('uploads'),
-    'minimum_version' => '5.6.0',
+    'minimum_version' => '5.6.4',
     'namespace'       => 'c40dcba2-411d-11ec-973a-0242ac130003',
     'nordigen_id'     => env('NORDIGEN_ID', ''),
     'nordigen_key'    => env('NORDIGEN_KEY', ''),
