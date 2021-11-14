@@ -142,7 +142,6 @@ class ConfigurationController extends Controller
         $configuration->setSkipForm($fromRequest['skip_form']);
 
         // loop accounts:
-
         $accounts = [];
         foreach (array_keys($fromRequest['do_import']) as $identifier) {
             if (isset($fromRequest['accounts'][$identifier])) {

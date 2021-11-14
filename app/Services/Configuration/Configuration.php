@@ -409,8 +409,6 @@ class Configuration
         $this->accountTypes = $accountTypes;
     }
 
-
-
     /**
      * @return array
      */
