@@ -62,7 +62,6 @@ class ConfigurationPostRequest extends Request
     public function rules(): array
     {
         return [
-            //'some_weird_field' => 'required',
             'do_import.*'                   => 'numeric',
             'accounts.*'                    => 'numeric',
             'date_range'                    => 'required|in:all,partial,range',

@@ -139,6 +139,7 @@ class SendTransactions
     private function sendTransaction(string $url, string $token, int $index, array $transaction): ?TransactionGroup
     {
         Log::debug(sprintf('Now in %s', __METHOD__));
+        Log::debug('Will send to Firefly III: ', $transaction);
         $request = new PostTransactionRequest($url, $token);
 
         $request->setVerify(config('importer.connection.verify'));

@@ -2,12 +2,16 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## 0.3.0 - 2021-11-15
+
+### Fixed
+- Various transaction fixes.
+
 ## 0.2.0 - 2021-11-09
 
 ### Fixed
 - Mapping works.
 - Various other fixes.
-
 
 ## 0.1.0 - 2021-11-07
 

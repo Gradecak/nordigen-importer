@@ -110,6 +110,8 @@ class NordigenImport extends Command
         $this->line('--------');
         $this->line('Running...');
 
+
+        // TODO this part of the code is copied in the "autoImport" command and needs to be de-duplicated
         if (null !== $this->argument('downloadIdentifier')) {
             $downloadIdentifier = $this->argument('downloadIdentifier');
             $this->line(sprintf('You have submitted an existing download: "%s"', $downloadIdentifier));

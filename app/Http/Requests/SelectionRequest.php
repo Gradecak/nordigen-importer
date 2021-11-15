@@ -61,7 +61,6 @@ class SelectionRequest extends Request
      * Configure the validator instance with special rules for after the basic validation rules.
      *
      * @param Validator $validator
-     * See reference nr. 74
      *
      * @return void
      */
