@@ -195,7 +195,7 @@ class ConfigurationController extends Controller
 
         /** @var Account $account */
         foreach ($response as $index => $account) {
-            Log::debug(sprintf('[%d/%d] Now collecting information for account %s', ($index + 1), $total, $account->getIdentifier()));
+            Log::debug(sprintf('[%d/%d] Now collecting information for account %s', ($index + 1), $total, $account->getIdentifier()), $account->toLocalArray());
             $account  = AccountInformationCollector::collectInformation($account);
             $return[] = $account;
             $cache[]  = $account->toLocalArray();
