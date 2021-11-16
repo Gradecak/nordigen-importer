@@ -22,6 +22,8 @@
 
 namespace App\Services\Nordigen\Services;
 
+use App\Exceptions\ImporterErrorException;
+use App\Exceptions\ImporterHttpException;
 use App\Services\Nordigen\Model\Account;
 use App\Services\Nordigen\Model\Balance;
 use App\Services\Nordigen\Request\GetAccountBalanceRequest;
@@ -46,8 +48,22 @@ class AccountInformationCollector
         Log::debug(sprintf(sprintf('Now in %s', __METHOD__)));
 
         // you know nothing, Jon Snow
-        $account = self::getAccountDetails($account);
-        return self::getBalanceDetails($account);
+        $detailedAccount = $account;
+        try {
+            $detailedAccount = self::getAccountDetails($account);
+        } catch (ImporterHttpException | ImporterErrorException $e) {
+            Log::error($e->getMessage());
+            // ignore error otherwise for now.
+        }
+        $balanceAccount = $detailedAccount;
+
+        try {
+            $balanceAccount = self::getBalanceDetails($account);
+        } catch (ImporterHttpException | ImporterErrorException $e) {
+            Log::error($e->getMessage());
+            // ignore error otherwise for now.
+        }
+        return $balanceAccount;
     }
 
     /**
@@ -90,6 +106,12 @@ class AccountInformationCollector
         return $account;
     }
 
+    /**
+     * @param Account $account
+     * @return Account
+     * @throws ImporterErrorException
+     * @throws ImporterHttpException
+     */
     private static function getBalanceDetails(Account $account): Account
     {
         Log::debug(sprintf(sprintf('Now in %s(%s)', __METHOD__, $account->getIdentifier())));
