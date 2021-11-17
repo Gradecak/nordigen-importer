@@ -63,6 +63,7 @@ class AccountInformationCollector
             Log::error($e->getMessage());
             // ignore error otherwise for now.
         }
+
         return $balanceAccount;
     }
 

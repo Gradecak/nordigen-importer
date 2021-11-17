@@ -22,6 +22,8 @@
 
 namespace App\Services\Nordigen\Model;
 
+use Log;
+
 /**
  * Class Account
  */
@@ -46,10 +48,36 @@ class Account
     private string $usage;
     private array  $balances = [];
 
+    /**
+     * Make sure all fields have an (empty) value
+     */
+    public function __construct()
+    {
+        $this->identifier               = '';
+        $this->bban                     = '';
+        $this->bic                      = '';
+        $this->cashAccountType          = '';
+        $this->currency                 = '';
+        $this->details                  = '';
+        $this->displayName              = '';
+        $this->iban                     = '';
+        $this->linkedAccounts           = '';
+        $this->msisdn                   = '';
+        $this->name                     = '';
+        $this->ownerAddressUnstructured = '';
+        $this->ownerName                = '';
+        $this->product                  = '';
+        $this->resourceId               = '';
+        $this->status                   = '';
+        $this->usage                    = '';
+        $this->balances                 = [];
+    }
+
     public static function createFromIdentifier(string $identifier): self
     {
         $self = new self;
         $self->setIdentifier($identifier);
+
         return $self;
     }
 
@@ -232,20 +260,32 @@ class Account
     /**
      * @return string
      */
-    public function getFullName(): string {
-        if('' !== $this->getName()) {
+    public function getFullName(): string
+    {
+        Log::debug('Account::getFullName()');
+        if ('' !== $this->getName()) {
+            Log::debug(sprintf('Return getName(): "%s"', $this->getName()));
+
             return $this->getName();
         }
-        if('' !== $this->getDisplayName()) {
+        if ('' !== $this->getDisplayName()) {
+            Log::debug(sprintf('Return getDisplayName(): "%s"', $this->getDisplayName()));
+
             return $this->getDisplayName();
         }
-        if('' !== $this->getOwnerName()) {
+        if ('' !== $this->getOwnerName()) {
+            Log::debug(sprintf('Return getOwnerName(): "%s"', $this->getOwnerName()));
+
             return $this->getOwnerName();
         }
-        if('' !== $this->getIban()) {
+        if ('' !== $this->getIban()) {
+            Log::debug(sprintf('Return getIban(): "%s"', $this->getIban()));
+
             return $this->getIban();
         }
-        return 'x';
+        Log::warning('Account::getFullName(): no field with name, return "(no name)"');
+
+        return '(no name)';
     }
 
     /**
@@ -388,6 +428,7 @@ class Account
 
     /**
      * @param array $array
+     *
      * @return static
      */
     public static function fromLocalArray(array $array): self
@@ -414,6 +455,7 @@ class Account
         foreach ($array['balances'] as $arr) {
             $object->balances[] = Balance::fromLocalArray($arr);
         }
+
         return $object;
     }
 
