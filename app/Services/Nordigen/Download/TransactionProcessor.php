@@ -92,7 +92,7 @@ class TransactionProcessor
         }
         $return = [];
         foreach ($transactions as $transaction) {
-            $madeOn = $transaction->valueDate;
+            $madeOn = $transaction->bookingDate;
 
             if (null !== $this->notBefore && $madeOn->lte($this->notBefore)) {
                 app('log')->info(

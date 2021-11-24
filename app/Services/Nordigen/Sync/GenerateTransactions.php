@@ -202,8 +202,8 @@ class GenerateTransactions
             'transactions'            => [
                 [
                     'type'          => 'withdrawal', // reverse
-                    'date'          => $entry->valueDate->format('Y-m-d'),
-                    'datetime'      => $entry->valueDate->toW3cString(),
+                    'date'          => $entry->bookingDate->format('Y-m-d'),
+                    'datetime'      => $entry->bookingDate->toW3cString(),
                     'amount'        => $entry->transactionAmount,
                     'description'   => $entry->getDescription(),
                     'order'         => 0,
